@@ -11,7 +11,7 @@ services:
     image: postgres:14.0
     restart: always
     environment:
-      POSTGRES_PASSWORD: DB_Password123
+      POSTGRES_PASSWORD: rootpassword
     volumes:
       - "dbdata:/var/lib/postgresql/data"
       - "./scripts/db-scripts:/docker-entrypoint-initdb.d/"

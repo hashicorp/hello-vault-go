@@ -9,3 +9,9 @@ path "secret/*" {
 path "secret/super-secret" {
   capabilities = ["deny"]
 }
+
+# Allows read-only access to the secret path that will be used
+# by Vault to handle generation of dynamic database credentials.
+path "database/creds" {
+  capabilities = ["read"]
+}

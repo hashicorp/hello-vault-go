@@ -2,12 +2,11 @@
 
 set -euo pipefail
 
-pushd scripts
+pushd setup
 
 ./setup.sh
 
-./build.sh
-
-./run.sh
+# TODO: figure out how to run just the application again without restarting Vault
+#./run.sh
 
 popd
