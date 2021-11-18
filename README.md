@@ -1,6 +1,6 @@
-# hello-vault-dotnet
+# hello-vault-go
 
-This is a sample application that demonstrates how to authenticate to and retrieve secrets from HashiCorp's [Vault](https://www.vaultproject.io/).
+This is a sample application that demonstrates how to authenticate to and retrieve secrets from HashiCorp [Vault](https://www.vaultproject.io/).
 
 ## Prerequisites
 
@@ -10,9 +10,11 @@ This is a sample application that demonstrates how to authenticate to and retrie
 
 ## How To Run
 
-To run this application, clone this repo, `cd` into it, then run `/.start.sh`. This will start up all the components of the application using Docker-Compose.
+**WARNING** This Vault server is configured to run in "dev" mode, an insecure setting that allows for easy testing.
 
-The application will be listening on port 8080. Confirm that it's working correctly by doing `curl http://localhost:8080/`. If you get back "Hello Vault! :)", the application was built and run successfully.
+1. Clone this repo and `cd` into it.
+2. Run `/.start.sh`. This will start up all the components of the application using Docker-Compose. The application will be listening on port 8080. 
+3. `curl http://localhost:8080/` to confirm it's working. If you get back "Hello Vault! :)", the application was built and run successfully.
 
 ## API Endpoints
 
