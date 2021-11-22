@@ -20,4 +20,6 @@ This is a sample application that demonstrates how to authenticate to and retrie
 
 The application has a variety of REST API endpoints that allow you to explore some of Vault's features.
 
-(TODO: table explaining each API endpoint and what it's demonstrating here)
+| Endpoint  | Demonstrated feature |
+| ------------- | ------------- |
+| `/products`  | Uses Vault's database secrets engine to generate dynamic database credentials. |
