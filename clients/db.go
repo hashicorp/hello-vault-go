@@ -3,12 +3,9 @@ package clients
 import (
 	"database/sql"
 	"fmt"
-	"log"
-	"time"
-
-	_ "github.com/lib/pq"
-
 	"github.com/hashicorp/hello-vault-go/util"
+	_ "github.com/lib/pq"
+	"log"
 )
 
 const (
@@ -16,10 +13,18 @@ const (
 	EnvDBPort = "DB_PORT"
 )
 
-func MustGetDatabase() (db *sql.DB) {
+func MustGetDatabase() *sql.DB {
+	db, err := GetDatabase()
+	if err != nil {
+		log.Fatal(err)
+	}
+	return db
+}
+
+func GetDatabase() (*sql.DB, error) {
 	// TODO: convert this to use dynamic DB credentials from Vault
-	hostName := util.GetDefault(EnvDBHost, "localhost")
-	hostPort := util.GetDefault(EnvDBPort, "5432")
+	hostName := util.GetEnvOrDefault(EnvDBHost, "localhost")
+	hostPort := util.GetEnvOrDefault(EnvDBPort, "5432")
 	user := "tmptmp"
 	password := "temp"
 	dbName := "postgres"
@@ -30,23 +35,10 @@ func MustGetDatabase() (db *sql.DB) {
 	db, err := sql.Open("postgres", connectionStr)
 
 	if err != nil {
-		log.Fatal("could not create db", err)
+		return nil, err
 	}
 
-	timeout := time.Now().Add(time.Minute*1)
-	timedout := true
-	for time.Now().Before(timeout) {
-		if db.Ping() != nil {
-			time.Sleep(time.Second * 3)
-			continue
-		}
-		timedout = false
-		break
-	}
+	err = db.Ping()
 
-	if timedout {
-		log.Fatal("couldn't reach database")
-	}
-
-	return db
+	return db, err
 }

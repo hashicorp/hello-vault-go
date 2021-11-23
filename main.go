@@ -22,8 +22,8 @@ func main() {
 	handlers.SetRoutes(r)
 
 	addr := fmt.Sprintf("%s:%s",
-		util.GetDefault(EnvServerAddress, "0.0.0.0"),
-		util.GetDefault(EnvServerPort, "8080"))
+		util.GetEnvOrDefault(EnvServerAddress, "0.0.0.0"),
+		util.GetEnvOrDefault(EnvServerPort, "8080"))
 
 	log.Println("starting server at", addr)
 

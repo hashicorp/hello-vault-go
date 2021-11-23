@@ -35,7 +35,7 @@ func NewSecretStore() (*secretStore, error) {
 	ss := &secretStore{}
 	config := vault.DefaultConfig() // modify for more granular configuration
 	//update address
-	config.Address = util.GetDefault(EnvVaultAddress, "http://localhost:8200")
+	config.Address = util.GetEnvOrDefault(EnvVaultAddress, "http://localhost:8200")
 	client, err := vault.NewClient(config)
 	if err != nil {
 		return nil, fmt.Errorf("unable to initialize Vault client: %w", err)
@@ -45,7 +45,7 @@ func NewSecretStore() (*secretStore, error) {
 
 	// A combination of a Role ID and Secret ID is required to log in to Vault
 	// with an AppRole. We're passing this in from an environment variable, "APPROLE_ROLE_ID".
-	role := util.MustGet(EnvAppRoleID)
+	role := util.MustGetEnv(EnvAppRoleID)
 
 	// The Secret ID is a value that needs to be protected, so instead of the
 	// app having knowledge of the secret ID directly, we have a trusted orchestrator (https://learn.hashicorp.com/tutorials/vault/secure-introduction?in=vault/app-integration#trusted-orchestrator)
