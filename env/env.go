@@ -17,8 +17,8 @@ const (
 	VaultAddress = "VAULT_ADDRESS"
 )
 
-// GetEnvOrDefault retrieves the value of the environment variable named by the key, if unset returns default
-func GetEnvOrDefault(key, def string) string {
+// GetOrDefault retrieves the value of the environment variable named by the key, if unset returns default
+func GetOrDefault(key, def string) string {
 	v, exists := os.LookupEnv(key)
 	if !exists {
 		return def
@@ -26,8 +26,8 @@ func GetEnvOrDefault(key, def string) string {
 	return v
 }
 
-// MustGetEnv retrieves the value of the environment variable named by the key, if unset calls log.Fatal()
-func MustGetEnv(key string) string {
+// MustGet retrieves the value of the environment variable named by the key, if unset calls log.Fatal()
+func MustGet(key string) string {
 	v, exists := os.LookupEnv(key)
 	if !exists {
 		log.Fatalf("%s not found in environment", key)

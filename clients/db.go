@@ -20,8 +20,8 @@ func MustGetDatabase() *sql.DB {
 
 func GetDatabase() (*sql.DB, error) {
 	// TODO: convert this to use dynamic DB credentials from Vault
-	hostName := env.GetEnvOrDefault(env.DBHost, "localhost")
-	hostPort := env.GetEnvOrDefault(env.DBPort, "5432")
+	hostName := env.GetOrDefault(env.DBHost, "localhost")
+	hostPort := env.GetOrDefault(env.DBPort, "5432")
 	user := "tmptmp"
 	password := "temp"
 	dbName := "postgres"
