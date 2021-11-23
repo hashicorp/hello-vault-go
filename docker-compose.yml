@@ -2,11 +2,15 @@ version: "3.9"
 services:
   api:
     build: .
+    environment:
+      SECRET_ID: 30f6766b-ed31-bc1f-aaae-4f9fac3f414f
+      APPROLE_ROLE_ID: ce80d2ac-e517-9564-8460-b405edf2fd28
     ports:
-      - 8080:8080
+      - "8080:8080"
     depends_on:
       - db
       - vault
+
   db:
     image: postgres:14.0
     restart: always
@@ -14,17 +18,22 @@ services:
       POSTGRES_PASSWORD: rootpassword
     volumes:
       - "dbdata:/var/lib/postgresql/data"
-      - "./scripts/db-scripts:/docker-entrypoint-initdb.d/"
+      - "./setup/db-scripts:/docker-entrypoint-initdb.d/"
     ports:
-      - 5432:5432
+      - "5432:5432"
+
   vault:
     image: vault:latest
-    environment:
-      VAULT_DEV_ROOT_TOKEN_ID: root
+    volumes:
+      - "vaultdata:/vault/file"
+      - "./setup/vault-server:/vault/config"
     ports:
-      - 8200:8200
+      - "8200:8200"
     cap_add:
       - IPC_LOCK
+    command:
+      - "server"
 
 volumes:
   dbdata:
+  vaultdata:

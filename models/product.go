@@ -1,8 +1,13 @@
 package models
 
-import "database/sql"
+import (
+	"database/sql"
 
-var DB *sql.DB
+	"github.com/hashicorp/hello-vault-go/clients"
+	"github.com/hashicorp/hello-vault-go/util"
+)
+
+var db = clients.MustGetDatabase()
 
 type Product struct {
 	ID   int    `json:"id"`
@@ -10,8 +15,11 @@ type Product struct {
 }
 
 func GetAllProducts() ([]Product, error) {
-	rows, err := DB.Query("SELECT * FROM products;")
+	rows, err := db.Query("SELECT * FROM products;")
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, util.NotFoundError
+		}
 		return nil, err
 	}
 	defer rows.Close()
@@ -25,7 +33,8 @@ func GetAllProducts() ([]Product, error) {
 		}
 		products = append(products, p)
 	}
-	if err := rows.Err(); err != nil {
+
+	if err = rows.Err(); err != nil {
 		return nil, err
 	}
 
