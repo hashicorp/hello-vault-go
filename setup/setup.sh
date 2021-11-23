@@ -26,7 +26,7 @@ vault write auth/approle/role/dev-role \
 # set up database secrets engine
 vault secrets enable database
 
-# vault write database/config/my-postgresql-database \
+# vault write database/env/my-postgresql-database \
 #     plugin_name=postgresql-database-plugin \
 #     allowed_roles="dev-readonly" \
 #     connection_url="postgresql://{{username}}:{{password}}@localhost:5432/" \

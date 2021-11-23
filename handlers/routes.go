@@ -10,7 +10,6 @@ import (
 
 	"github.com/hashicorp/hello-vault-go/clients"
 	"github.com/hashicorp/hello-vault-go/models"
-	"github.com/hashicorp/hello-vault-go/util"
 )
 
 const (
@@ -24,7 +23,7 @@ var (
 	ss = clients.MustMakeNewSecretStore()
 
 	client = http.Client{
-		Timeout:       time.Second*10,
+		Timeout: time.Second * 10,
 	}
 )
 
@@ -48,7 +47,7 @@ func updateAPIKey() func(w http.ResponseWriter, r *http.Request) {
 		p := &APIUpdateRequest{}
 		err := json.NewDecoder(r.Body).Decode(p)
 		if err != nil {
-			util.ErrorResponder(err, w, r)
+			ErrorResponder(err, w, r)
 			return
 		}
 
@@ -57,10 +56,10 @@ func updateAPIKey() func(w http.ResponseWriter, r *http.Request) {
 
 		err = ss.PutSecret(r.Context(), apiKeyPath, data)
 		if err != nil {
-			util.ErrorResponder(err, w, r)
+			ErrorResponder(err, w, r)
 			return
 		}
-		util.JSONResponder(http.StatusNoContent, nil, w, r)
+		JSONResponder(http.StatusNoContent, nil, w, r)
 	}
 }
 
@@ -69,20 +68,20 @@ func createPayment() func(w http.ResponseWriter, r *http.Request) {
 		//retrieve secret from Vault passing in the active context and path to secret
 		secret, err := ss.GetSecret(r.Context(), apiKeyPath)
 		if err != nil {
-			util.ErrorResponder(err, w, r)
+			ErrorResponder(err, w, r)
 			return
 		}
 
 		//check that our expected key is in the returned secret
 		apiKey, ok := secret["apiKey"]
 		if !ok {
-			util.ErrorResponder(fmt.Errorf("key apiKey not in secret"), w, r)
+			ErrorResponder(fmt.Errorf("key apiKey not in secret"), w, r)
 			return
 		}
 
 		req, err := http.NewRequest("GET", "https://postman-echo.com/headers", nil)
 		if err != nil {
-			util.ErrorResponder(err, w, r)
+			ErrorResponder(err, w, r)
 			return
 		}
 
@@ -90,7 +89,7 @@ func createPayment() func(w http.ResponseWriter, r *http.Request) {
 
 		resp, err := client.Do(req)
 		if err != nil {
-			util.ErrorResponder(err, w, r)
+			ErrorResponder(err, w, r)
 			return
 		}
 		defer resp.Body.Close()
@@ -98,11 +97,11 @@ func createPayment() func(w http.ResponseWriter, r *http.Request) {
 		body := make(map[string]interface{})
 		err = json.NewDecoder(resp.Body).Decode(&body)
 		if err != nil {
-			util.ErrorResponder(err, w, r)
+			ErrorResponder(err, w, r)
 			return
 		}
 
-		util.JSONResponder(http.StatusOK, body, w, r)
+		JSONResponder(http.StatusOK, body, w, r)
 	}
 }
 
@@ -110,9 +109,9 @@ func getProducts() func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		products, err := models.GetAllProducts()
 		if err != nil {
-			util.ErrorResponder(err, w, r)
+			ErrorResponder(err, w, r)
 			return
 		}
-		util.JSONResponder(http.StatusOK, products, w, r)
+		JSONResponder(http.StatusOK, products, w, r)
 	}
 }

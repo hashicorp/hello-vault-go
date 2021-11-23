@@ -7,13 +7,8 @@ import (
 
 	"github.com/gorilla/mux"
 
+	"github.com/hashicorp/hello-vault-go/env"
 	"github.com/hashicorp/hello-vault-go/handlers"
-	"github.com/hashicorp/hello-vault-go/util"
-)
-
-const (
-	EnvServerAddress = "SERVER_ADDRESS"
-	EnvServerPort    = "SERVER_PORT"
 )
 
 func main() {
@@ -22,8 +17,8 @@ func main() {
 	handlers.SetRoutes(r)
 
 	addr := fmt.Sprintf("%s:%s",
-		util.GetEnvOrDefault(EnvServerAddress, "0.0.0.0"),
-		util.GetEnvOrDefault(EnvServerPort, "8080"))
+		env.GetEnvOrDefault(env.ServerAddress, "0.0.0.0"),
+		env.GetEnvOrDefault(env.ServerPort, "8080"))
 
 	log.Println("starting server at", addr)
 

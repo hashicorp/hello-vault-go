@@ -8,13 +8,7 @@ import (
 	vault "github.com/hashicorp/vault/api"
 	auth "github.com/hashicorp/vault/api/auth/approle"
 
-	"github.com/hashicorp/hello-vault-go/util"
-)
-
-const (
-	EnvSecretID  = "SECRET_ID"
-	EnvAppRoleID = "APPROLE_ROLE_ID"
-	EnvVaultAddress = "VAULT_ADDRESS"
+	"github.com/hashicorp/hello-vault-go/env"
 )
 
 type secretStore struct {
@@ -35,7 +29,7 @@ func NewSecretStore() (*secretStore, error) {
 	ss := &secretStore{}
 	config := vault.DefaultConfig() // modify for more granular configuration
 	//update address
-	config.Address = util.GetEnvOrDefault(EnvVaultAddress, "http://localhost:8200")
+	config.Address = env.GetEnvOrDefault(env.VaultAddress, "http://localhost:8200")
 	client, err := vault.NewClient(config)
 	if err != nil {
 		return nil, fmt.Errorf("unable to initialize Vault client: %w", err)
@@ -45,13 +39,13 @@ func NewSecretStore() (*secretStore, error) {
 
 	// A combination of a Role ID and Secret ID is required to log in to Vault
 	// with an AppRole. We're passing this in from an environment variable, "APPROLE_ROLE_ID".
-	role := util.MustGetEnv(EnvAppRoleID)
+	role := env.MustGetEnv(env.AppRoleID)
 
 	// The Secret ID is a value that needs to be protected, so instead of the
 	// app having knowledge of the secret ID directly, we have a trusted orchestrator (https://learn.hashicorp.com/tutorials/vault/secure-introduction?in=vault/app-integration#trusted-orchestrator)
 	// give the app access to a short-lived response-wrapping token (https://www.vaultproject.io/docs/concepts/response-wrapping).
 	// Read more at: https://learn.hashicorp.com/tutorials/vault/approle-best-practices?in=vault/auth-methods#secretid-delivery-best-practices
-	secretID := &auth.SecretID{FromEnv: EnvSecretID}
+	secretID := &auth.SecretID{FromEnv: env.SecretID}
 
 	appRoleAuth, err := auth.NewAppRoleAuth(
 		role,

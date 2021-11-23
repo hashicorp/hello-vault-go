@@ -26,7 +26,7 @@ services:
     image: vault:latest
     volumes:
       - "vaultdata:/vault/file"
-      - "./setup/vault-server:/vault/config"
+      - "./setup/vault-server:/vault/env"
     ports:
       - "8200:8200"
     cap_add:

@@ -3,14 +3,11 @@ package clients
 import (
 	"database/sql"
 	"fmt"
-	"github.com/hashicorp/hello-vault-go/util"
-	_ "github.com/lib/pq"
 	"log"
-)
 
-const (
-	EnvDBHost = "DB_HOST"
-	EnvDBPort = "DB_PORT"
+	_ "github.com/lib/pq"
+
+	"github.com/hashicorp/hello-vault-go/env"
 )
 
 func MustGetDatabase() *sql.DB {
@@ -23,8 +20,8 @@ func MustGetDatabase() *sql.DB {
 
 func GetDatabase() (*sql.DB, error) {
 	// TODO: convert this to use dynamic DB credentials from Vault
-	hostName := util.GetEnvOrDefault(EnvDBHost, "localhost")
-	hostPort := util.GetEnvOrDefault(EnvDBPort, "5432")
+	hostName := env.GetEnvOrDefault(env.DBHost, "localhost")
+	hostPort := env.GetEnvOrDefault(env.DBPort, "5432")
 	user := "tmptmp"
 	password := "temp"
 	dbName := "postgres"

@@ -1,8 +1,20 @@
-package util
+package env
 
 import (
 	"log"
 	"os"
+)
+
+const (
+	ServerAddress = "SERVER_ADDRESS"
+	ServerPort    = "SERVER_PORT"
+
+	DBHost = "DB_HOST"
+	DBPort = "DB_PORT"
+
+	SecretID     = "SECRET_ID"
+	AppRoleID    = "APPROLE_ROLE_ID"
+	VaultAddress = "VAULT_ADDRESS"
 )
 
 // GetEnvOrDefault retrieves the value of the environment variable named by the key, if unset returns default
