@@ -14,7 +14,7 @@ import (
 func MustGetDatabase(timeout time.Duration) *sql.DB {
 	db, err := GetDatabase(timeout)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("could not reach database: %s", err)
 	}
 	return db
 }
