@@ -6,14 +6,21 @@ import (
 )
 
 const (
+	// ServerAddress is the key for the environment variable that holds the listener address for the API
 	ServerAddress = "SERVER_ADDRESS"
+	// ServerPort is the key for the environment variable that holds the listener port for the API
 	ServerPort    = "SERVER_PORT"
 
+	// DBHost is the key for the environment variable that holds the db host address
 	DBHost = "DB_HOST"
+	// DBPort is the key for the environment variable that holds the db port
 	DBPort = "DB_PORT"
 
+	// SecretID is the key for the environment variable that holds the secret ID used to authenticate Vault requests
 	SecretID     = "SECRET_ID"
+	// AppRoleID is the key for the environment variable that holds the AppRoleID used to authenticate Vault requests
 	AppRoleID    = "APPROLE_ROLE_ID"
+	// VaultAddress is the key for the environment variable that holds the address to Vault
 	VaultAddress = "VAULT_ADDRESS"
 )
 

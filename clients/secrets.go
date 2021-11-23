@@ -11,13 +11,14 @@ import (
 	"github.com/hashicorp/hello-vault-go/env"
 )
 
-type secretStore struct {
+type kvV2Store struct {
 	vc   *vault.Client
 	auth *auth.AppRoleAuth
 }
 
-func MustMakeNewSecretStore() (ss *secretStore) {
-	ss, err := NewSecretStore()
+// MustGetNewKVv2Store returns a new KVv2 store backed by Vault or calls log.Fatal()
+func MustGetNewKVv2Store() (ss *kvV2Store) {
+	ss, err := NewKVv2Store()
 
 	if err != nil {
 		log.Fatal("could not get secret store", err)
@@ -25,8 +26,9 @@ func MustMakeNewSecretStore() (ss *secretStore) {
 	return
 }
 
-func NewSecretStore() (*secretStore, error) {
-	ss := &secretStore{}
+// NewKVv2Store returns a new KVv2 store backed by Vault
+func NewKVv2Store() (*kvV2Store, error) {
+	ss := &kvV2Store{}
 	config := vault.DefaultConfig() // modify for more granular configuration
 	//update address
 	config.Address = env.GetOrDefault(env.VaultAddress, "http://localhost:8200")
@@ -63,7 +65,7 @@ func NewSecretStore() (*secretStore, error) {
 // GetSecret fetches the latest version of a key-value secret (kv-v2) after authenticating via AppRole,
 // an auth method used by machines that are unable to use platform-based
 // authentication mechanisms like AWS Auth, Kubernetes Auth, etc.
-func (ss secretStore) GetSecret(ctx context.Context, path string) (map[string]interface{}, error) {
+func (ss kvV2Store) GetSecret(ctx context.Context, path string) (map[string]interface{}, error) {
 	authInfo, err := ss.vc.Auth().Login(ctx, ss.auth)
 	if err != nil {
 		return nil, fmt.Errorf("unable to login to AppRole auth method: %w", err)
@@ -88,7 +90,7 @@ func (ss secretStore) GetSecret(ctx context.Context, path string) (map[string]in
 }
 
 // PutSecret creates or overwrites a key-value secret (kv-v2) after authenticating via AppRole
-func (ss secretStore) PutSecret(ctx context.Context, path string, data map[string]interface{}) error {
+func (ss kvV2Store) PutSecret(ctx context.Context, path string, data map[string]interface{}) error {
 	authInfo, err := ss.vc.Auth().Login(ctx, ss.auth)
 	if err != nil {
 		return fmt.Errorf("unable to login to AppRole auth method: %w", err)

@@ -1,10 +1,12 @@
 package models
 
 import (
+	"time"
+
 	"github.com/hashicorp/hello-vault-go/clients"
 )
 
-var db = clients.MustGetDatabase()
+var db = clients.MustGetDatabase(time.Second * 10)
 
 type Product struct {
 	ID   int    `json:"id"`

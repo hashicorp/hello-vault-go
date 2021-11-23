@@ -12,6 +12,7 @@ const (
 	MIMEApplicationJSON = "application/json"
 )
 
+// Error is a web error with convenience fields for nice messages
 type Error struct {
 	Internal error
 	Code     int
@@ -19,6 +20,7 @@ type Error struct {
 	Response interface{}
 }
 
+// Error returns the internal error
 func (e Error) Error() string {
 	return e.Internal.Error()
 }
@@ -30,7 +32,7 @@ var NotFoundError = Error{
 
 var InternalServerError = Error{
 	Code:    http.StatusInternalServerError,
-	Message: "our technical team has been notified",
+	Message: "internal server error",
 }
 
 // JSONResponder prepares and sends a JSON response

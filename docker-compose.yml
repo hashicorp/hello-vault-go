@@ -3,8 +3,8 @@ services:
   api:
     build: .
     environment:
-      SECRET_ID: 30f6766b-ed31-bc1f-aaae-4f9fac3f414f
-      APPROLE_ROLE_ID: ce80d2ac-e517-9564-8460-b405edf2fd28
+      SECRET_ID: "<secret id here>"
+      APPROLE_ROLE_ID: "<app role id here>"
     ports:
       - "8080:8080"
     depends_on:
@@ -29,8 +29,6 @@ services:
       - "./setup/vault-server:/vault/env"
     ports:
       - "8200:8200"
-    cap_add:
-      - IPC_LOCK
     command:
       - "server"
 
