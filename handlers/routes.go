@@ -80,7 +80,7 @@ func createPayment() func(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		req, err := http.NewRequest("GET", env.GetOrDefault(env.SecureAPI, "http://localhost:1717/api"), nil)
+		req, err := http.NewRequest("GET", env.GetOrDefault(env.SecureServer, "http://localhost:1717/api"), nil)
 		if err != nil {
 			ErrorResponder(err, w, r)
 			return
