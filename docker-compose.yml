@@ -26,9 +26,11 @@ services:
     image: vault:latest
     volumes:
       - "vaultdata:/vault/file"
-      - "./setup/vault-server:/vault/env"
+      - "./setup/vault-server:/vault/config"
     ports:
       - "8200:8200"
+    cap_add:
+      - IPC_LOCK
     command:
       - "server"
 

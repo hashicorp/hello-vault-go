@@ -6,19 +6,19 @@ import (
 	"log"
 
 	vault "github.com/hashicorp/vault/api"
-	auth "github.com/hashicorp/vault/api/auth/approle"
+	"github.com/hashicorp/vault/api/auth/approle"
 
 	"github.com/hashicorp/hello-vault-go/env"
 )
 
-type kvV2Store struct {
+type secretsClient struct {
 	vc   *vault.Client
-	auth *auth.AppRoleAuth
+	auth vault.AuthMethod
 }
 
-// MustGetNewKVv2Store returns a new KVv2 store backed by Vault or calls log.Fatal()
-func MustGetNewKVv2Store() (ss *kvV2Store) {
-	ss, err := NewKVv2Store()
+// MustGetVaultAppRoleClient returns a new client for interacting with Vault KVv2 secrets or calls log.Fatal()
+func MustGetVaultAppRoleClient() (ss *secretsClient) {
+	ss, err := NewVaultAppRoleClient()
 
 	if err != nil {
 		log.Fatal("could not get secret store", err)
@@ -26,9 +26,9 @@ func MustGetNewKVv2Store() (ss *kvV2Store) {
 	return
 }
 
-// NewKVv2Store returns a new KVv2 store backed by Vault
-func NewKVv2Store() (*kvV2Store, error) {
-	ss := &kvV2Store{}
+// NewVaultAppRoleClient returns a new client for interacting with Vault KVv2 secrets via AppRole authentication
+func NewVaultAppRoleClient() (*secretsClient, error) {
+	ss := &secretsClient{}
 	config := vault.DefaultConfig() // modify for more granular configuration
 	//update address
 	config.Address = env.GetOrDefault(env.VaultAddress, "http://localhost:8200")
@@ -47,31 +47,29 @@ func NewKVv2Store() (*kvV2Store, error) {
 	// app having knowledge of the secret ID directly, we have a trusted orchestrator (https://learn.hashicorp.com/tutorials/vault/secure-introduction?in=vault/app-integration#trusted-orchestrator)
 	// give the app access to a short-lived response-wrapping token (https://www.vaultproject.io/docs/concepts/response-wrapping).
 	// Read more at: https://learn.hashicorp.com/tutorials/vault/approle-best-practices?in=vault/auth-methods#secretid-delivery-best-practices
-	secretID := &auth.SecretID{FromEnv: env.SecretID}
+	secretID := &approle.SecretID{FromEnv: env.SecretID}
 
-	appRoleAuth, err := auth.NewAppRoleAuth(
+	appRoleAuth, err := approle.NewAppRoleAuth(
 		role,
 		secretID,
-		auth.WithWrappingToken(), // Only required if the secret ID is response-wrapped.
+		approle.WithWrappingToken(), // Only required if the secret ID is response-wrapped.
 	)
 
 	if err != nil {
-		return nil, fmt.Errorf("unable to initialize AppRole auth method: %w", err)
+		return nil, fmt.Errorf("unable to initialize AppRole approle method: %w", err)
 	}
 	ss.auth = appRoleAuth
 	return ss, nil
 }
 
-// GetSecret fetches the latest version of a key-value secret (kv-v2) after authenticating via AppRole,
-// an auth method used by machines that are unable to use platform-based
-// authentication mechanisms like AWS Auth, Kubernetes Auth, etc.
-func (ss kvV2Store) GetSecret(ctx context.Context, path string) (map[string]interface{}, error) {
+// GetSecret fetches the latest version of a key-value secret (kv-v2)
+func (ss secretsClient) GetSecret(ctx context.Context, path string) (map[string]interface{}, error) {
 	authInfo, err := ss.vc.Auth().Login(ctx, ss.auth)
 	if err != nil {
-		return nil, fmt.Errorf("unable to login to AppRole auth method: %w", err)
+		return nil, fmt.Errorf("unable to login to AppRole approle method: %w", err)
 	}
 	if authInfo == nil {
-		return nil, fmt.Errorf("no auth info was returned after login")
+		return nil, fmt.Errorf("no approle info was returned after login")
 	}
 
 	secret, err := ss.vc.Logical().Read(path)
@@ -90,14 +88,14 @@ func (ss kvV2Store) GetSecret(ctx context.Context, path string) (map[string]inte
 }
 
 // PutSecret creates or overwrites a key-value secret (kv-v2) after authenticating via AppRole
-func (ss kvV2Store) PutSecret(ctx context.Context, path string, data map[string]interface{}) error {
+func (ss secretsClient) PutSecret(ctx context.Context, path string, data map[string]interface{}) error {
 	authInfo, err := ss.vc.Auth().Login(ctx, ss.auth)
 	if err != nil {
-		return fmt.Errorf("unable to login to AppRole auth method: %w", err)
+		return fmt.Errorf("unable to login to AppRole approle method: %w", err)
 	}
 
 	if authInfo == nil {
-		return fmt.Errorf("no auth info was returned after login")
+		return fmt.Errorf("no approle info was returned after login")
 	}
 
 	secret, err := ss.vc.Logical().Write(path, data)

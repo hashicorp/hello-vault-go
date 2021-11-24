@@ -18,7 +18,7 @@ const (
 
 var (
 	// sample secret store backed by Vault
-	ss = clients.MustGetNewKVv2Store()
+	appRoleClient = clients.MustGetVaultAppRoleClient()
 
 	client = http.Client{
 		Timeout: time.Second * 10,
@@ -54,7 +54,7 @@ func updateAPIKey() func(w http.ResponseWriter, r *http.Request) {
 		var data map[string]interface{}
 		data["apiKey"] = p.Key
 
-		err = ss.PutSecret(r.Context(), apiKeyPath, data)
+		err = appRoleClient.PutSecret(r.Context(), apiKeyPath, data)
 		if err != nil {
 			ErrorResponder(err, w, r)
 			return
@@ -66,7 +66,7 @@ func updateAPIKey() func(w http.ResponseWriter, r *http.Request) {
 func createPayment() func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// retrieve secret from Vault passing in the active context and path to secret
-		secret, err := ss.GetSecret(r.Context(), apiKeyPath)
+		secret, err := appRoleClient.GetSecret(r.Context(), apiKeyPath)
 		if err != nil {
 			ErrorResponder(err, w, r)
 			return
