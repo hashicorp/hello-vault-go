@@ -39,8 +39,8 @@ services:
     command:
       - "server"
 
-  # secureAPI is a simulated 3rd party server that requires a specific header to get a 200 response
-  secureAPI:
+  # secure-service is a simulated 3rd party server that requires a specific header to get a 200 response
+  secure-service:
     image: nginx:latest
     volumes:
       - type:      bind
