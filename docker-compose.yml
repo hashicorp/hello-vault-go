@@ -43,7 +43,9 @@ services:
   secureAPI:
     image: nginx:latest
     volumes:
-      - "./setup/nginx/default.conf.template:/etc/nginx/templates/default.conf.template"
+      - type:      bind
+        source:    ./setup/nginx/default.conf.template
+        target:    /etc/nginx/templates/default.conf.template
     ports:
       - "1717:80"
     environment:
