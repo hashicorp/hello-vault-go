@@ -34,6 +34,17 @@ services:
     command:
       - "server"
 
+  # secureAPI is a simulated 3rd party server that requires a specific header to get a 200 response
+  secureAPI:
+    image: nginx:latest
+    volumes:
+      - "./setup/nginx/default.conf.template:/etc/nginx/templates/default.conf.template"
+    ports:
+      - "1717:80"
+    environment:
+      # API_KEY sets the expected value for incoming requests' header X-API-KEY
+      API_KEY: HelloWorld
+
 volumes:
   dbdata:
   vaultdata:

@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/hashicorp/hello-vault-go/env"
 	"net/http"
 	"time"
 
@@ -51,7 +52,7 @@ func updateAPIKey() func(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		var data map[string]interface{}
+		data := make(map[string]interface{})
 		data["apiKey"] = p.Key
 
 		err = appRoleClient.PutSecret(r.Context(), apiKeyPath, data)
@@ -79,13 +80,13 @@ func createPayment() func(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		req, err := http.NewRequest("GET", "https://postman-echo.com/headers", nil)
+		req, err := http.NewRequest("GET", env.GetOrDefault(env.SecureAPI, "http://localhost:1717/api"), nil)
 		if err != nil {
 			ErrorResponder(err, w, r)
 			return
 		}
 
-		req.Header.Set("API_KEY", apiKey.(string))
+		req.Header.Set("X-API-KEY", apiKey.(string))
 
 		resp, err := client.Do(req)
 		if err != nil {
