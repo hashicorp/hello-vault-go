@@ -4,7 +4,7 @@ server {
     default_type application/json;
 
     location /api {
-        if ($http_x_api_key != "${API_KEY}") {
+        if ($http_x_api_key != "${EXPECTED_API_KEY}") {
             return 401 "{\"error\":\"unauthorized\"}";
         }
         return 200 "{\"message\":\"hello world!\"}";

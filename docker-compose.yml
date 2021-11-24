@@ -5,7 +5,7 @@ services:
     environment:
       SERVER_PORT: "8080"
       DB_HOST: "db"
-      SECURE_API_ADDRESS: "http://secureAPI/api"
+      SECURE_API_ADDRESS: "http://secure-source/api"
       SECRET_ID: "<secret id here>"
       APPROLE_ROLE_ID: "<app role id here>"
       VAULT_ADDRESS: "http://vault:8200"
@@ -39,7 +39,7 @@ services:
     command:
       - "server"
 
-  # secure-service is a simulated 3rd party server that requires a specific header to get a 200 response
+  # secure-service is a simulated 3rd party service that requires a specific header to get a 200 response
   secure-service:
     image: nginx:latest
     volumes:
