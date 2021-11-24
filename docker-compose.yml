@@ -49,8 +49,8 @@ services:
     ports:
       - "1717:80"
     environment:
-      # API_KEY sets the expected value for incoming requests' header X-API-KEY
-      API_KEY: HelloWorld
+      # EXPECTED_API_KEY sets the expected value for incoming requests' header X-API-KEY
+      EXPECTED_API_KEY: my-secret-key
 
 volumes:
   dbdata:
