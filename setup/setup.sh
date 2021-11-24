@@ -26,17 +26,19 @@ vault write auth/approle/role/dev-role \
 # set up database secrets engine
 vault secrets enable database
 
-# vault write database/config/my-postgresql-database \
-#     plugin_name=postgresql-database-plugin \
-#     allowed_roles="dev-readonly" \
-#     connection_url="postgresql://{{username}}:{{password}}@localhost:5432/" \
-#     username="vaultuser" \
-#     password="vaultpass"
+# configure Vault to be able to connect to DB
+vault write database/config/my-postgresql-database \
+    plugin_name=postgresql-database-plugin \
+    allowed_roles="dev-readonly" \
+    connection_url="postgresql://{{username}}:{{password}}@db:5432/postgres?sslmode=disable" \
+    username="vaultuser" \
+    password="vaultpass"
 
-# vault write database/roles/dev-readonly \
-#     db_name=my-postgresql-database \
-#     creation_statements="CREATE ROLE \"{{name}}\" WITH LOGIN PASSWORD '{{password}}' VALID UNTIL '{{expiration}}'; \
-#         GRANT readonly TO \"{{name}}\";" \
-#     default_ttl="1h" \
-#     max_ttl="24h"
+# allow Vault to create roles dynamically with the same privileges as the readonly role created in our db init scripts
+vault write database/roles/dev-readonly \
+    db_name=my-postgresql-database \
+    creation_statements="CREATE ROLE \"{{name}}\" WITH LOGIN PASSWORD '{{password}}' VALID UNTIL '{{expiration}}'; \
+        GRANT readonly TO \"{{name}}\";" \
+    default_ttl="1h" \
+    max_ttl="24h"
 

@@ -14,7 +14,7 @@ services:
       POSTGRES_PASSWORD: rootpassword
     volumes:
       - "dbdata:/var/lib/postgresql/data"
-      - "./scripts/db-scripts:/docker-entrypoint-initdb.d/"
+      - "./setup/db-scripts:/docker-entrypoint-initdb.d/"
     ports:
       - 5432:5432
   vault:
