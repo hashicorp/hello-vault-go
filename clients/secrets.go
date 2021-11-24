@@ -98,6 +98,8 @@ func (ss secretsClient) PutSecret(ctx context.Context, path string, data map[str
 		return fmt.Errorf("no approle info was returned after login")
 	}
 
+	data = map[string]interface{}{"data": data}
+
 	secret, err := ss.vc.Logical().Write(path, data)
 	if err != nil {
 		return fmt.Errorf("unable to write secret: %w", err)

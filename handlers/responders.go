@@ -48,12 +48,15 @@ func JSONResponder(code int, i interface{}, w http.ResponseWriter, r *http.Reque
 	w.Header().Set(HeaderContentType, MIMEApplicationJSON)
 	w.WriteHeader(code)
 
-	_, err = w.Write(j)
-	if err != nil {
-		ErrorResponder(err, w, r)
+	if code != http.StatusNoContent {
+		_, err = w.Write(j)
+		if err != nil {
+			ErrorResponder(err, w, r)
+		}
 	}
 
 	log.Println("success", r.Method, r.URL.Path, code)
+
 }
 
 // ErrorResponder prepares and sends an error response defaulting to a generic 500
