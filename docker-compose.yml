@@ -6,8 +6,8 @@ services:
       SERVER_PORT: "8080"
       DB_HOST: "db"
       SECURE_API_ADDRESS: "http://secureAPI/api"
-      SECRET_ID: "df56e71d-75a0-f245-d91e-7ccfcc1d936d"
-      APPROLE_ROLE_ID: "ce80d2ac-e517-9564-8460-b405edf2fd28"
+      SECRET_ID: "<secret id here>"
+      APPROLE_ROLE_ID: "<app role id here>"
       VAULT_ADDRESS: "http://vault:8200"
     ports:
       - "8080:8080"
