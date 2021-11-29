@@ -22,6 +22,9 @@ const (
 	AppRoleID    = "APPROLE_ROLE_ID"
 	// VaultAddress is the key for the environment variable that holds the address to Vault
 	VaultAddress = "VAULT_ADDRESS"
+
+	// SecureServer is the key for the environment variable that holds the address to our simulated secure server
+	SecureServer = "SECURE_ADDRESS"
 )
 
 // GetOrDefault retrieves the value of the environment variable named by the key, if unset returns default

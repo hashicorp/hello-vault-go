@@ -3,13 +3,18 @@ services:
   api:
     build: .
     environment:
+      SERVER_PORT: "8080"
+      DB_HOST: "db"
+      SECURE_ADDRESS: "http://secure-service/api"
       SECRET_ID: "<secret id here>"
       APPROLE_ROLE_ID: "<app role id here>"
+      VAULT_ADDRESS: "http://vault:8200"
     ports:
       - "8080:8080"
     depends_on:
       - db
       - vault
+      - secure-service
 
   db:
     image: postgres:14.0
@@ -33,6 +38,19 @@ services:
       - IPC_LOCK
     command:
       - "server"
+
+  # secure-service is a simulated 3rd party service that requires a specific header to get a 200 response
+  secure-service:
+    image: nginx:latest
+    volumes:
+      - type:      bind
+        source:    ./setup/nginx/default.conf.template
+        target:    /etc/nginx/templates/default.conf.template
+    ports:
+      - "1717:80"
+    environment:
+      # EXPECTED_API_KEY sets the expected value for incoming requests' header X-API-KEY
+      EXPECTED_API_KEY: my-secret-key
 
 volumes:
   dbdata:
