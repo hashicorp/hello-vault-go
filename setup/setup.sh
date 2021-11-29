@@ -3,6 +3,7 @@
 set -euo pipefail
 
 export VAULT_ADDR="http://0.0.0.0:8200"
+# WARNING: Do not display the root token in a script like this in production.
 export VAULT_TOKEN="root"
 
 # (re)start application, Vault server, and database
@@ -16,7 +17,7 @@ cd setup/
 sleep 1
 
 # set up vault access for a developer user
-vault policy write dev-policy dev-policy.hcl
+vault policy write dev-policy vault-server/dev-policy.hcl
 
 vault auth enable approle
 
@@ -33,6 +34,9 @@ vault write database/config/my-postgresql-database \
     connection_url="postgresql://{{username}}:{{password}}@db:5432/postgres?sslmode=disable" \
     username="vaultuser" \
     password="vaultpass"
+
+# rotates the password for the Vault user, ensures user is only accessible by Vault itself
+vault write -force database/config/my-postgresql-database
 
 # allow Vault to create roles dynamically with the same privileges as the readonly role created in our db init scripts
 vault write database/roles/dev-readonly \

@@ -29,15 +29,17 @@ services:
 
   vault:
     image: vault:latest
-    volumes:
-      - "vaultdata:/vault/file"
-      - "./setup/vault-server:/vault/config"
+    # volumes:
+    #   - "vaultdata:/vault/file"
+    #   - "./setup/vault-server:/vault/config"
     ports:
       - "8200:8200"
     cap_add:
       - IPC_LOCK
-    command:
-      - "server"
+    # command:
+    #   - "server"
+    environment:
+      VAULT_DEV_ROOT_TOKEN_ID: root
 
   # secure-service is a simulated 3rd party service that requires a specific header to get a 200 response
   secure-service:
@@ -54,4 +56,4 @@ services:
 
 volumes:
   dbdata:
-  vaultdata:
+  # vaultdata:

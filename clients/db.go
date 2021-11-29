@@ -1,6 +1,7 @@
 package clients
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"log"
@@ -20,20 +21,24 @@ func MustGetDatabase(timeout time.Duration) *sql.DB {
 }
 
 func GetDatabase(timeout time.Duration) (*sql.DB, error) {
-	// TODO: convert this to use dynamic DB credentials from Vault
 	hostName := env.GetOrDefault(env.DBHost, "localhost")
 	hostPort := env.GetOrDefault(env.DBPort, "5432")
-	user := "tmptmp"
-	password := "temp"
-	dbName := "postgres"
+	dbName := env.GetOrDefault(env.DBName, "postgres")
+
+	secretsClient := MustGetVaultAppRoleClient()
+	creds, err := secretsClient.GetDatabaseCredentials(context.TODO())
+	if err != nil {
+		return nil, fmt.Errorf("unable to get database credentials: %w", err)
+	}
+
 	connectionStr := fmt.Sprintf("port=%s host=%s user=%s "+
 		"password=%s dbname=%s sslmode=disable",
-		hostPort, hostName, user, password, dbName)
+		hostPort, hostName, creds.Username, creds.Password, dbName)
 
 	db, err := sql.Open("postgres", connectionStr)
 
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unable to open database connection: %w", err)
 	}
 
 	// wait until DB is ready or timeout expires
@@ -42,6 +47,7 @@ func GetDatabase(timeout time.Duration) (*sql.DB, error) {
 		if err == nil {
 			return db, nil
 		}
+		log.Print("Database ping failed. Retrying.")
 	}
 
 	return db, err
