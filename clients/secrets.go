@@ -2,6 +2,7 @@ package clients
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 
@@ -82,7 +83,7 @@ func (ss secretsClient) GetSecret(ctx context.Context, path string) (map[string]
 		return nil, fmt.Errorf("unable to read secret: %w", err)
 	}
 
-	log.Println("get secret", *secret)
+	log.Println("get secret")
 
 	data, ok := secret.Data["data"].(map[string]interface{})
 	if !ok {
@@ -105,12 +106,12 @@ func (ss secretsClient) PutSecret(ctx context.Context, path string, data map[str
 
 	data = map[string]interface{}{"data": data}
 
-	secret, err := ss.vc.Logical().Write(path, data)
-	if err != nil {
-		return fmt.Errorf("unable to write secret: %w", err)
+	_, werr := ss.vc.Logical().Write(path, data)
+	if werr != nil {
+		return fmt.Errorf("unable to write secret: %w", werr)
 	}
 
-	log.Println("put secret", secret)
+	log.Println("put secret")
 	return nil
 }
 
@@ -131,12 +132,19 @@ func (ss secretsClient) GetDatabaseCredentials(ctx context.Context) (*DatabaseCr
 		return nil, fmt.Errorf("unable to read secret: %w", err)
 	}
 
-	log.Println("get temporary database credentials", *secret)
+	log.Println("get temporary database credentials")
 
-	creds, ok := secret.Data["data"].(*DatabaseCredentials)
-	if !ok {
-		return nil, fmt.Errorf("malformed secret returned")
+	credsBytes, err := json.Marshal(secret.Data)
+	if err != nil {
+		return nil, fmt.Errorf("malformed creds returned: %w", err)
 	}
+
+	creds := &DatabaseCredentials{}
+	uerr := json.Unmarshal(credsBytes, creds)
+	if uerr != nil {
+		return nil, fmt.Errorf("unable to unmarshal creds: %w", uerr)
+	}
+
 	if creds == nil {
 		return nil, fmt.Errorf("no database credentials were returned by Vault")
 	}
