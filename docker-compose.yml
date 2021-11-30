@@ -1,13 +1,11 @@
 version: "3.9"
 services:
-  api:
+  app:
     build: .
     environment:
       SERVER_PORT: "8080"
       DB_HOST: "db"
       SECURE_ADDRESS: "http://secure-service/api"
-      SECRET_ID: "<secret id here>"
-      APPROLE_ROLE_ID: "<app role id here>"
       VAULT_ADDRESS: "http://vault:8200"
     ports:
       - "8080:8080"

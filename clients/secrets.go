@@ -52,7 +52,7 @@ func NewVaultAppRoleClient() (*secretsClient, error) {
 	// app having knowledge of the secret ID directly, we have a trusted orchestrator (https://learn.hashicorp.com/tutorials/vault/secure-introduction?in=vault/app-integration#trusted-orchestrator)
 	// give the app access to a short-lived response-wrapping token (https://www.vaultproject.io/docs/concepts/response-wrapping).
 	// Read more at: https://learn.hashicorp.com/tutorials/vault/approle-best-practices?in=vault/auth-methods#secretid-delivery-best-practices
-	secretID := &approle.SecretID{FromEnv: env.SecretID}
+	secretID := &approle.SecretID{FromFile: "path/to/wrapping-token"}
 
 	appRoleAuth, err := approle.NewAppRoleAuth(
 		role,

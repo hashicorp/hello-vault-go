@@ -1,23 +1,14 @@
-#!/bin/bash
+#!/bin/sh
 
 set -euo pipefail
 
-export VAULT_ADDR="http://0.0.0.0:8200"
-# WARNING: Do not display the root token in a script like this in production.
-export VAULT_TOKEN="root"
-
-# (re)start application, Vault server, and database
-cd ..
-docker-compose down
-docker-compose build
-docker-compose up -d
-cd setup/
+export VAULT_TOKEN=${SETUP_TOKEN}
 
 # give Vault a moment to come up fully before pinging it
 sleep 1
 
 # set up vault access for a developer user
-vault policy write dev-policy vault-server/dev-policy.hcl
+vault policy write dev-policy /app/setup/vault-server/dev-policy.hcl
 
 vault auth enable approle
 
@@ -46,3 +37,5 @@ vault write database/roles/dev-readonly \
     default_ttl="1h" \
     max_ttl="24h"
 
+# start up "trusted orchestrator" substitute to generate response-wrapped secret ID for AppRole authentication
+/app/setup/vault-server/trusted-orchestrator.sh &
