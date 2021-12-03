@@ -3,7 +3,7 @@ package models
 import (
 	"time"
 
-	"github.com/hashicorp/hello-vault-go/clients"
+	"github.com/hashicorp/hello-vault-go/internal/clients"
 )
 
 var db = clients.MustGetDatabase(time.Second * 10)

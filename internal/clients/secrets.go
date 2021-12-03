@@ -9,7 +9,7 @@ import (
 	vault "github.com/hashicorp/vault/api"
 	"github.com/hashicorp/vault/api/auth/approle"
 
-	"github.com/hashicorp/hello-vault-go/env"
+	"github.com/hashicorp/hello-vault-go/internal/env"
 )
 
 type DatabaseCredentials struct {

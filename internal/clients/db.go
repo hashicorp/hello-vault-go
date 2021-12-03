@@ -9,7 +9,7 @@ import (
 
 	_ "github.com/lib/pq"
 
-	"github.com/hashicorp/hello-vault-go/env"
+	"github.com/hashicorp/hello-vault-go/internal/env"
 )
 
 func MustGetDatabase(timeout time.Duration) *sql.DB {

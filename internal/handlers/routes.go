@@ -8,9 +8,9 @@ import (
 
 	"github.com/gorilla/mux"
 
-	"github.com/hashicorp/hello-vault-go/clients"
-	"github.com/hashicorp/hello-vault-go/env"
-	"github.com/hashicorp/hello-vault-go/models"
+	"github.com/hashicorp/hello-vault-go/internal/clients"
+	"github.com/hashicorp/hello-vault-go/internal/env"
+	"github.com/hashicorp/hello-vault-go/internal/models"
 )
 
 const (

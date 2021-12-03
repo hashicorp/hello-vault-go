@@ -7,8 +7,8 @@ import (
 
 	"github.com/gorilla/mux"
 
-	"github.com/hashicorp/hello-vault-go/env"
-	"github.com/hashicorp/hello-vault-go/handlers"
+	"github.com/hashicorp/hello-vault-go/internal/env"
+	"github.com/hashicorp/hello-vault-go/internal/handlers"
 )
 
 func main() {
