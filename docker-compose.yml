@@ -1,30 +1,57 @@
 version: "3.9"
 services:
-  api:
+  app:
     build: .
+    environment:
+      SERVER_PORT: "8080"
+      DB_HOST: "db"
+      SECURE_ADDRESS: "http://secure-service/api"
+      VAULT_ADDRESS: "http://vault:8200"
     ports:
-      - 8080:8080
+      - "8080:8080"
     depends_on:
       - db
       - vault
+      - secure-service
+
   db:
     image: postgres:14.0
     restart: always
     environment:
-      POSTGRES_PASSWORD: DB_Password123
+      POSTGRES_PASSWORD: rootpassword
     volumes:
       - "dbdata:/var/lib/postgresql/data"
-      - "./scripts/db-scripts:/docker-entrypoint-initdb.d/"
+      - "./setup/db-scripts:/docker-entrypoint-initdb.d/"
     ports:
-      - 5432:5432
+      - "5432:5432"
+
   vault:
     image: vault:latest
-    environment:
-      VAULT_DEV_ROOT_TOKEN_ID: root
+    # volumes:
+    #   - "vaultdata:/vault/file"
+    #   - "./setup/vault-server:/vault/config"
     ports:
-      - 8200:8200
+      - "8200:8200"
     cap_add:
       - IPC_LOCK
+    # command:
+    #   - "server"
+    environment:
+      VAULT_DEV_ROOT_TOKEN_ID: root
+
+  # secure-service is a simulated 3rd party service that requires a specific header to get a 200 response
+  secure-service:
+    image: nginx:latest
+    volumes:
+      - type:      bind
+        source:    ./setup/nginx/default.conf.template
+        target:    /etc/nginx/templates/default.conf.template
+    ports:
+      - "1717:80"
+    environment:
+      # EXPECTED_API_KEY sets the expected value for incoming requests' header X-API-KEY
+      EXPECTED_API_KEY: my-secret-key
 
 volumes:
   dbdata:
+  # vaultdata:

@@ -1,25 +1,30 @@
 # hello-vault-go
 
-This is a sample application that demonstrates how to authenticate to and retrieve secrets from HashiCorp's [Vault](https://www.vaultproject.io/).
+This is a sample application that demonstrates how to authenticate to and retrieve secrets from HashiCorp [Vault](https://www.vaultproject.io/).
 
 ## Prerequisites
 
-1. [Docker](https://docs.docker.com/get-docker/) to easily run the application in an identical environment regardless of your local operating system.
+1. [Docker](https://docs.docker.com/get-docker/) to easily run the application in the same environment regardless of your local operating system.
 2. [Docker-Compose](https://docs.docker.com/compose/install/) to easily set up all the components of the demo (the application's web server, the Vault server, the database, etc.) all at once.
-3. [Vault](https://www.vaultproject.io/downloads) CLI to easily interact with the Vault server once it's up and running.
 
 ## How To Run
 
 **WARNING** This Vault server is configured to run in "dev" mode, an insecure setting that allows for easy testing.
 
-Never use dev mode in production! Please see [these guidelines](https://learn.hashicorp.com/tutorials/vault/production-hardening) for making your Vault server production-ready.
+1. Clone this repo and `cd` into it.
+2. Run `/.run.sh`. This will start up all the components of the application using Docker-Compose. The application will be listening on port 8080. 
+3. `curl http://localhost:8080/products` to confirm it's working. If you get back a list of fake products, the application and all of its dependencies were built and run successfully.
 
-1. Clone this repo and cd into it.
-2. Run `/.start.sh`. This will setup the database and Vault server, and then build and run the application.
+## API Endpoints
 
-If you want to run these actions as individual steps, you can run `scripts/setup.sh`, `scripts/build.sh`, and `scripts/run.sh` respectively.
+The application has a variety of REST API endpoints that allow you to explore some of Vault's features. 
 
-3. The application is now listening on port 8080. In another terminal tab, `curl http://localhost:8080/` to confirm that it's up and running. You should see "Hello Vault! :)"
+Try running these sample `curl` commands to see the result (you can pipe to `jq` to make it prettier), then take a peek at the code to see how the app integrates with Vault to accomplish this.
 
-## API Endpoints 
-... [[explanation of each API endpoint and what it's demonstrating goes here]]
+| Sample curl  | Demonstrated feature |
+| ------------- | ------------- |
+| `curl http://localhost:8080/products` | Uses Vault's database secrets engine to generate dynamic database credentials, which are then used to make calls to the PostgreSQL database. |
+| `curl -X PUT 'http://localhost:8080/admin/keys' \
+--header 'Content-Type: application/json' \
+--data-raw '{"key": "my-secret-key"}'` | Uses Vault's static secrets engine to store an API key so that we can access another service's restricted API endpoint. |
+| `curl -X POST 'http://localhost:8080/payments | Makes a request to another service's restricted API endpoint, using the API key that we just added to Vault's static secrets engine. | 

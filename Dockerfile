@@ -1,10 +1,17 @@
-FROM golang:1.16-alpine AS GO_BUILD
-COPY . /app
-WORKDIR /app
-RUN go build -o /go/bin/hello-vault
+FROM golang:1.16-alpine
 
-FROM scratch
+RUN apk --no-cache add curl unzip jq
+
+RUN curl https://releases.hashicorp.com/vault/1.8.4/vault_1.8.4_linux_amd64.zip -o vault.zip && \
+    unzip vault.zip && \
+    mv vault /usr/bin
+
+COPY . /app
+
 WORKDIR /app
-COPY --from=GO_BUILD /go/bin/hello-vault/ ./
+
+RUN go build -o bin/hello-vault
+
 EXPOSE 8080
-CMD ./hello-vault
+
+CMD /app/setup/entrypoint.sh

@@ -1,0 +1,17 @@
+server {
+    listen       80;
+    server_name  localhost secureAPI;
+    default_type application/json;
+
+    location /api {
+        if ($http_x_api_key != "${EXPECTED_API_KEY}") {
+            return 401 "{\"error\":\"unauthorized\"}";
+        }
+        return 200 "{\"message\":\"hello world!\"}";
+    }
+
+    location / {
+        return 404 "{\"error\":\"resource not found\"}";
+    }
+
+}
