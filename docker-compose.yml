@@ -10,7 +10,7 @@ services:
       VAULT_API_KEY_PATH:           kv-v2/data/api-key
       DATABASE_HOSTNAME:            db
       DATABASE_PORT:                5432
-      DATABASE_NAME:                posgres
+      DATABASE_NAME:                postgres
       DATABASE_TIMEOUT:             10s
       SECURE_SERVICE_ADDRESS:       http://secure-service/api
     ports:
