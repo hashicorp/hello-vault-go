@@ -3,10 +3,16 @@ services:
   app:
     build: .
     environment:
-      SERVER_PORT: "8080"
-      DB_HOST: "db"
-      SECURE_ADDRESS: "http://secure-service/api"
-      VAULT_ADDRESS: "http://vault:8200"
+      MY_ADDRESS:                   :8080
+      VAULT_ADDRESS:                http://vault:8200
+      VAULT_APPROLE_SECRET_ID_FILE: path/to/wrapping-token  # role id populated in entrypoint
+      VAULT_DATABASE_CREDS_PATH:    database/creds/dev-readonly
+      VAULT_API_KEY_PATH:           kv-v2/data/api-key
+      DATABASE_HOSTNAME:            db
+      DATABASE_PORT:                5432
+      DATABASE_NAME:                postgres
+      DATABASE_TIMEOUT:             10s
+      SECURE_SERVICE_ADDRESS:       http://secure-service/api
     ports:
       - "8080:8080"
     depends_on:

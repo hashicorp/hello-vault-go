@@ -13,7 +13,7 @@ export SETUP_TOKEN="root" # WARNING: insecure
 /app/setup/vault-server/setup.sh
 
 # retrieve role ID for AppRole authentication
-export APPROLE_ROLE_ID=$(curl -H "X-Vault-Token: ${SETUP_TOKEN}" ${VAULT_ADDR}/v1/auth/approle/role/dev-role/role-id | jq -r .data.role_id)
+export VAULT_APPROLE_ROLE_ID=$(curl -H "X-Vault-Token: ${SETUP_TOKEN}" ${VAULT_ADDR}/v1/auth/approle/role/dev-role/role-id | jq -r .data.role_id)
 
 # start application
 /app/bin/hello-vault
