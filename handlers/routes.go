@@ -1,8 +1,10 @@
 package handlers
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"time"
 
@@ -18,24 +20,47 @@ const (
 )
 
 var (
-	// sample secret store backed by Vault
-	appRoleClient = clients.MustGetVaultAppRoleClient()
-
 	client = http.Client{
 		Timeout: time.Second * 10,
 	}
 )
 
-// SetRoutes adds handler functions to the router for specific route / method pairs
-func SetRoutes(r *mux.Router) {
+type AppHandler struct {
+	DB      *sql.DB
+	Secrets *clients.SecretsClient
+}
+
+func ListenAndServe(h AppHandler) {
+	r := mux.NewRouter()
+	r.StrictSlash(true)
+	setRoutes(r, h)
+
+	addr := fmt.Sprintf("%s:%s",
+		env.GetOrDefault(env.ServerAddress, "0.0.0.0"),
+		env.GetOrDefault(env.ServerPort, "8080"))
+
+	log.Println("starting server at", addr)
+
+	srv := &http.Server{
+		Addr:    addr,
+		Handler: r,
+	}
+
+	if err := srv.ListenAndServe(); err != nil {
+		log.Fatalf("shutting down the server: %s", err)
+	}
+}
+
+// setRoutes adds handler functions to the router for specific route / method pairs
+func setRoutes(r *mux.Router, h AppHandler) {
 	// Product handlers using configured database connection
-	r.HandleFunc("/products", getProducts()).Methods("GET")
+	r.HandleFunc("/products", h.getProducts()).Methods("GET")
 
 	// Retrieve api key from vault to create an authenticated request (read from vault)
-	r.HandleFunc("/payments", createPayment()).Methods("POST")
+	r.HandleFunc("/payments", h.createPayment()).Methods("POST")
 
 	// Update api key used for making payments (write to vault)
-	r.HandleFunc("/admin/keys", updateAPIKey()).Methods("PUT")
+	r.HandleFunc("/admin/keys", h.updateAPIKey()).Methods("PUT")
 }
 
 // APIUpdateRequest is the shape of the request for updating the API key
@@ -43,31 +68,21 @@ type APIUpdateRequest struct {
 	Key string `json:"key"`
 }
 
-func updateAPIKey() func(w http.ResponseWriter, r *http.Request) {
+func (h AppHandler) getProducts() func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		p := &APIUpdateRequest{}
-		err := json.NewDecoder(r.Body).Decode(p)
+		products, err := models.GetAllProducts(h.DB)
 		if err != nil {
 			ErrorResponder(err, w, r)
 			return
 		}
-
-		data := make(map[string]interface{})
-		data["apiKey"] = p.Key
-
-		err = appRoleClient.PutSecret(r.Context(), apiKeyPath, data)
-		if err != nil {
-			ErrorResponder(err, w, r)
-			return
-		}
-		JSONResponder(http.StatusNoContent, nil, w, r)
+		JSONResponder(http.StatusOK, products, w, r)
 	}
 }
 
-func createPayment() func(w http.ResponseWriter, r *http.Request) {
+func (h AppHandler) createPayment() func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// retrieve secret from Vault passing in the active context and path to secret
-		secret, err := appRoleClient.GetSecret(r.Context(), apiKeyPath)
+		secret, err := h.Secrets.GetSecret(r.Context(), apiKeyPath)
 		if err != nil {
 			ErrorResponder(err, w, r)
 			return
@@ -106,13 +121,23 @@ func createPayment() func(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func getProducts() func(w http.ResponseWriter, r *http.Request) {
+func (h AppHandler) updateAPIKey() func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		products, err := models.GetAllProducts()
+		p := &APIUpdateRequest{}
+		err := json.NewDecoder(r.Body).Decode(p)
 		if err != nil {
 			ErrorResponder(err, w, r)
 			return
 		}
-		JSONResponder(http.StatusOK, products, w, r)
+
+		data := make(map[string]interface{})
+		data["apiKey"] = p.Key
+
+		err = h.Secrets.PutSecret(r.Context(), apiKeyPath, data)
+		if err != nil {
+			ErrorResponder(err, w, r)
+			return
+		}
+		JSONResponder(http.StatusNoContent, nil, w, r)
 	}
 }

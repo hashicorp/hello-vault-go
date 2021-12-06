@@ -1,19 +1,13 @@
 package models
 
-import (
-	"time"
-
-	"github.com/hashicorp/hello-vault-go/clients"
-)
-
-var db = clients.MustGetDatabase(time.Second * 10)
+import "database/sql"
 
 type Product struct {
 	ID   int    `json:"id"`
 	Name string `json:"name"`
 }
 
-func GetAllProducts() ([]Product, error) {
+func GetAllProducts(db *sql.DB) ([]Product, error) {
 	rows, err := db.Query("SELECT * FROM products;")
 	if err != nil {
 		return nil, err

@@ -1,34 +1,36 @@
 package main
 
 import (
-	"fmt"
-	"log"
-	"net/http"
+	"time"
 
-	"github.com/gorilla/mux"
-
-	"github.com/hashicorp/hello-vault-go/env"
+	"github.com/hashicorp/hello-vault-go/clients"
 	"github.com/hashicorp/hello-vault-go/handlers"
 )
 
 func main() {
-	r := mux.NewRouter()
-	r.StrictSlash(true)
-	handlers.SetRoutes(r)
+	// WARNING: The goroutines in this function call log.Fatal if an unrecoverable error is encountered.
+	// Production applications may want to add more complex error handling and memory leak protection.
 
-	addr := fmt.Sprintf("%s:%s",
-		env.GetOrDefault(env.ServerAddress, "0.0.0.0"),
-		env.GetOrDefault(env.ServerPort, "8080"))
+	// create a client that is authenticated with Vault for all future secrets operations
+	sc := clients.MustGetSecretsClient()
+	// keep Vault connection alive
+	go sc.RenewVaultLogin()
 
-	log.Println("starting server at", addr)
+	// TODO: Fix the fact that the goroutine is coming back too quickly and so MustGetDatabase fails because the Vault auth hasn't happened yet.
+	// Maybe make it so MustGetSecretsClient does one login by itself first? Or something? How do we make this clean and readable?!
 
-	srv := &http.Server{
-		Addr:    addr,
-		Handler: r,
+	// create a client for connecting with the DB using dynamic credentials from Vault
+	db := clients.MustGetDatabase(time.Second*10, sc)
+	defer func() {
+		_ = db.Close()
+	}()
+	// keep database connection alive
+	go sc.RenewDatabaseLogin(db)
+
+	// init server
+	h := handlers.AppHandler{
+		DB:      db,
+		Secrets: sc,
 	}
-
-	if err := srv.ListenAndServe(); err != nil {
-		log.Fatalf("shutting down the server: %s", err)
-	}
-
+	handlers.ListenAndServe(h)
 }

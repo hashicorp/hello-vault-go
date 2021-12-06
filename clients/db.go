@@ -12,21 +12,20 @@ import (
 	"github.com/hashicorp/hello-vault-go/env"
 )
 
-func MustGetDatabase(timeout time.Duration) *sql.DB {
-	db, err := GetDatabase(timeout)
+func MustGetDatabase(timeout time.Duration, vault *SecretsClient) *sql.DB {
+	db, err := GetDatabase(timeout, vault)
 	if err != nil {
 		log.Fatalf("could not reach database: %s", err)
 	}
 	return db
 }
 
-func GetDatabase(timeout time.Duration) (*sql.DB, error) {
+func GetDatabase(timeout time.Duration, sc *SecretsClient) (*sql.DB, error) {
 	hostName := env.GetOrDefault(env.DBHost, "localhost")
 	hostPort := env.GetOrDefault(env.DBPort, "5432")
 	dbName := env.GetOrDefault(env.DBName, "postgres")
 
-	secretsClient := MustGetVaultAppRoleClient()
-	creds, err := secretsClient.GetDatabaseCredentials(context.TODO())
+	creds, err := sc.GetDatabaseCredentials(context.TODO())
 	if err != nil {
 		return nil, fmt.Errorf("unable to get database credentials: %w", err)
 	}
