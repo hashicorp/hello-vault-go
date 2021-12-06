@@ -1,12 +1,12 @@
-package clients
+package main
 
 import (
 	"context"
 	"database/sql"
 	"fmt"
 	"log"
+	"os"
 
-	"github.com/hashicorp/hello-vault-go/env"
 	vault "github.com/hashicorp/vault/api"
 	"github.com/hashicorp/vault/api/auth/approle"
 )
@@ -24,25 +24,25 @@ import (
 // performance standbys or performance replication, despite the client having
 // a freshly renewed token. See https://www.vaultproject.io/docs/enterprise/consistency#vault-1-7-mitigations
 // for several ways to mitigate this which are outside the scope of this code sample.
-func (sc *SecretsClient) RenewVaultLogin() {
+func (v *Vault) RenewVaultLogin() {
 	for {
-		vaultLoginResp, err := login(sc.Client)
+		vaultLoginResp, err := login(v.client)
 		if err != nil {
 			log.Fatalf("unable to authenticate to Vault: %v", err)
 		}
-		tokenErr := manageTokenLifecycle(sc.Client, vaultLoginResp)
+		tokenErr := manageTokenLifecycle(v.client, vaultLoginResp)
 		if tokenErr != nil {
 			log.Fatalf("unable to start managing token lifecycle: %v", tokenErr)
 		}
 	}
 }
 
-func (sc *SecretsClient) RenewDatabaseLogin(db *sql.DB) {
+func (v *Vault) RenewDatabaseLogin(db *sql.DB) {
 	for {
 		// TODO: reconnect to DB altogether
 		var dbCreds *vault.Secret
 
-		credsErr := manageDBSecretLifecycle(sc.Client, dbCreds)
+		credsErr := manageDBSecretLifecycle(v.client, dbCreds)
 		if credsErr != nil {
 			log.Fatalf("unable to start managing database credentials lifecycle: %v", credsErr)
 		}
@@ -52,7 +52,7 @@ func (sc *SecretsClient) RenewDatabaseLogin(db *sql.DB) {
 func login(client *vault.Client) (*vault.Secret, error) {
 	// A combination of a Role ID and Secret ID is required to log in to Vault
 	// with an AppRole. We're passing this in from an environment variable, "APPROLE_ROLE_ID".
-	role := env.MustGet(env.AppRoleID)
+	role := os.Getenv("VAULT_APPROLE_ROLE_ID")
 
 	// The Secret ID is a value that needs to be protected, so instead of the
 	// app having knowledge of the secret ID directly, we have a trusted orchestrator (https://learn.hashicorp.com/tutorials/vault/secure-introduction?in=vault/app-integration#trusted-orchestrator)
