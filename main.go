@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log"
 	"os"
 	"time"
@@ -19,8 +20,8 @@ type Environment struct {
 	// Vault address, approle login credentialials to authenticate with Vault,
 	// and the paths where secrets are to be found
 	VaultAddress             string `env:"VAULT_ADDRESS"                 default:"localhost:8200"               description:"Vault address"                                           long:"vault-address"`
-	VaultApproleRoleIDFile   string `env:"VAULT_APPROLE_ROLE_ID_FILE"    default:"/tmp/role"                    description:"AppRole role id file pathto authenticate with Vault"     long:"vault-approle-role-id-file"`
-	VaultApproleSecretIDFile string `env:"VAULT_APPROLE_SECRET_ID_FILE"  default:"/tmp/secret"       			description:"AppRole secret id file path to authenticate with Vault"  long:"vault-approle-secret-id-file"`
+	VaultApproleRoleID       string `env:"VAULT_APPROLE_ROLE_ID"         required:"true"                        description:"AppRole role id to authenticate with Vault"              long:"vault-approle-role-id"`
+	VaultApproleSecretIDFile string `env:"VAULT_APPROLE_SECRET_ID_FILE"  default:"path/to/wrapping-token"       description:"AppRole secret id file path to authenticate with Vault"  long:"vault-approle-secret-id-file"`
 	VaultDatabaseCredsPath   string `env:"VAULT_DATABASE_CREDS_PATH"     default:"database/creds/dev-readonly"  description:"Temporary database credentials will be generated here"   long:"vault-database-creds-path"`
 	VaultAPIKeyPath          string `env:"VAULT_API_KEY_PATH"            default:"kv-v2/data/api-key"           description:"Path to the api key used by 'secure-sevice'"             long:"vault-api-key-path"`
 
@@ -47,12 +48,12 @@ func main() {
 		log.Fatalf("Unable to parse environment variables: %v\n", err)
 	}
 
-	// ctx := context.Background()
+	ctx := context.Background()
 
 	// vault
 	vault, err := NewVaultAppRoleClient(
 		env.VaultAddress,
-		env.VaultApproleRoleIDFile,
+		env.VaultApproleRoleID,
 		env.VaultApproleSecretIDFile,
 		env.VaultDatabaseCredsPath,
 		env.VaultAPIKeyPath,
@@ -79,7 +80,7 @@ func main() {
 
 	// handlers & routes
 	h := Handlers{
-		//database:             database,
+		database:             database,
 		vault:                vault,
 		secureServiceAddress: env.SecureServiceAddress,
 	}
