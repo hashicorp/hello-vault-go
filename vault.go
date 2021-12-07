@@ -13,6 +13,7 @@ import (
 type Vault struct {
 	client                  *vault.Client
 	auth                    vault.AuthMethod
+	role					string
 	databaseCredentialsPath string
 	apiKeyPath              string
 }
@@ -50,6 +51,7 @@ func NewVaultAppRoleClient(address, approleRoleID, approleSecretIDFile, database
 
 	return &Vault{
 		client:                  client,
+		role:					 approleRoleID,
 		auth:                    appRoleAuth,
 		databaseCredentialsPath: databaseCredentialsPath,
 		apiKeyPath:              apiKeyPath,
