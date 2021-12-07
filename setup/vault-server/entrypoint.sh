@@ -16,8 +16,12 @@ vault policy write dev-policy /vault/config/dev-policy.hcl
 # enable approle
 vault auth enable approle
 
-# create role
-vault write auth/approle/role/dev-role token_policies=dev-policy
+# create role with some
+vault write auth/approle/role/dev-role \
+    token_policies=dev-policy \
+    secret_id_ttl=1h \
+    token_ttl=1h \
+    token_max_ttl=30h
 
 # set up kv-v2
 vault secrets enable -path=kv-v2 kv-v2
