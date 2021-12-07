@@ -16,7 +16,12 @@ vault policy write dev-policy /vault/config/dev-policy.hcl
 # enable approle
 vault auth enable approle
 
-# create role with some
+# create role with policies and ttls
+# secret_id_ttl determines how long the unwrapped secret_id will be valid for
+# token_ttl determines how long the login token is valid
+# token_max_ttl determines how long the login token can be renewed
+# read more here about parameters here:
+# https://www.vaultproject.io/api/auth/approle#parameters
 vault write auth/approle/role/dev-role \
     token_policies=dev-policy \
     secret_id_ttl=1h \
@@ -51,14 +56,14 @@ vault write database/roles/dev-readonly \
     default_ttl="1h" \
     max_ttl="24h"
 
-# write role id to shared location
-vault read auth/approle/role/dev-role/role-id | jq -r .data.role_id > /tmp/role
-
-# generate a wrapped secret for the web app to use
-# typically this would be handled by a trusted orchestrator
+# Typically these steps (provisioning a role and wrapped secret as well as making it available to the container)
+# are handled by a trusted orchestrator. In this example we're using a docker shared volume as our trusted entity
 # read more about trusted orchestrators here:
 # https://learn.hashicorp.com/tutorials/vault/secure-introduction?in=vault/app-integration#trusted-orchestrator
-nohup ./vault/generate-secret.sh &
+# write role id to shared location for the web app to consume
+vault read auth/approle/role/dev-role/role-id | jq -r .data.role_id > /tmp/role
+# generate a wrapped secret (one time use) that expires after 10 seconds for the web app to consume
+vault write -wrap-ttl=10s -f auth/approle/role/dev-role/secret-id | jq -r .wrap_info.token > /tmp/secret
 
-# run forever
+# keep vault container alive
 wait
