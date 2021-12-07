@@ -65,7 +65,7 @@ func (v *Vault) GetSecretAPIKey(ctx context.Context) (map[string]interface{}, er
 		return nil, fmt.Errorf("unable to read secret: %w", err)
 	}
 
-	log.Println("get secret")
+	log.Println("get static secret")
 
 	data, ok := secret.Data["data"].(map[string]interface{})
 	if !ok {
@@ -103,8 +103,8 @@ func (v *Vault) GetDatabaseCredentials(ctx context.Context) (DatabaseCredentials
 	return credentials, nil
 }
 
-// PutSecret creates or overwrites a key-value secret (kv-v2) after authenticating via AppRole
-func (v *Vault) PutSecret(ctx context.Context, path string, data map[string]interface{}) error {
+// PutSecret creates or updates a key-value secret (kv-v2)
+func (v *Vault) PutSecret(path string, data map[string]interface{}) error {
 	data = map[string]interface{}{"data": data}
 
 	_, err := v.client.Logical().Write(path, data)
