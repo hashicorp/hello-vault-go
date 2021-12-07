@@ -6,7 +6,8 @@ services:
       MY_ADDRESS:                   :8080
       VAULT_ADDRESS:                http://vault:8200
       VAULT_APPROLE_SECRET_ID_FILE: /tmp/secret
-      VAULT_APPROLE_ROLE_ID_FILE:   /tmp/role
+      # We inject the role id after our development vault server comes online
+      # VAULT_APPROLE_ROLE_ID:        ""
       VAULT_DATABASE_CREDS_PATH:    database/creds/dev-readonly
       VAULT_API_KEY_PATH:           kv-v2/data/api-key
       DATABASE_HOSTNAME:            db
