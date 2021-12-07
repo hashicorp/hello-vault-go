@@ -13,7 +13,6 @@ import (
 type Vault struct {
 	client                  *vault.Client
 	auth                    vault.AuthMethod
-	role					string
 	databaseCredentialsPath string
 	apiKeyPath              string
 }
@@ -51,21 +50,28 @@ func NewVaultAppRoleClient(address, approleRoleID, approleSecretIDFile, database
 
 	return &Vault{
 		client:                  client,
-		role:					 approleRoleID,
 		auth:                    appRoleAuth,
 		databaseCredentialsPath: databaseCredentialsPath,
 		apiKeyPath:              apiKeyPath,
 	}, nil
 }
 
-// GetSecretAPIKey fetches the latest version of secret api key from kv-v2
+// GetSecret fetches the latest version of secret api key from kv-v2
 func (v *Vault) GetSecretAPIKey(ctx context.Context) (map[string]interface{}, error) {
+	authInfo, err := v.client.Auth().Login(ctx, v.auth)
+	if err != nil {
+		return nil, fmt.Errorf("unable to login using approle auth method: %w", err)
+	}
+	if authInfo == nil {
+		return nil, fmt.Errorf("no approle info was returned after login")
+	}
+
 	secret, err := v.client.Logical().Read(v.apiKeyPath)
 	if err != nil {
 		return nil, fmt.Errorf("unable to read secret: %w", err)
 	}
 
-	log.Println("get static secret")
+	log.Println("get secret")
 
 	data, ok := secret.Data["data"].(map[string]interface{})
 	if !ok {
@@ -82,6 +88,15 @@ type DatabaseCredentials struct {
 
 // GetDatabaseCredentials retrieves a new set of temporary database credentials from Vault
 func (v *Vault) GetDatabaseCredentials(ctx context.Context) (DatabaseCredentials, error) {
+	// TODO: move all of these Logins to NewVaultAppRoleClient and kick off goroutine with LifetimeWatcher
+	authInfo, err := v.client.Auth().Login(ctx, v.auth)
+	if err != nil {
+		return DatabaseCredentials{}, fmt.Errorf("unable to login using approle auth method: %w", err)
+	}
+	if authInfo == nil {
+		return DatabaseCredentials{}, fmt.Errorf("no approle info was returned after login")
+	}
+
 	secret, err := v.client.Logical().Read(v.databaseCredentialsPath)
 	if err != nil {
 		return DatabaseCredentials{}, fmt.Errorf("unable to read secret: %w", err)
@@ -103,11 +118,20 @@ func (v *Vault) GetDatabaseCredentials(ctx context.Context) (DatabaseCredentials
 	return credentials, nil
 }
 
-// PutSecret creates or updates a key-value secret (kv-v2)
-func (v *Vault) PutSecret(path string, data map[string]interface{}) error {
+// PutSecret creates or overwrites a key-value secret (kv-v2) after authenticating via AppRole
+func (v *Vault) PutSecret(ctx context.Context, path string, data map[string]interface{}) error {
+	authInfo, err := v.client.Auth().Login(ctx, v.auth)
+	if err != nil {
+		return fmt.Errorf("unable to login using approle auth method: %w", err)
+	}
+
+	if authInfo == nil {
+		return fmt.Errorf("no approle info was returned after login")
+	}
+
 	data = map[string]interface{}{"data": data}
 
-	_, err := v.client.Logical().Write(path, data)
+	_, err = v.client.Logical().Write(path, data)
 	if err != nil {
 		return fmt.Errorf("unable to write secret: %w", err)
 	}

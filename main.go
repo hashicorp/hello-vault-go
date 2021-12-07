@@ -1,8 +1,7 @@
 package main
 
 import (
-	"fmt"
-	"io/ioutil"
+	"context"
 	"log"
 	"os"
 	"time"
@@ -21,8 +20,8 @@ type Environment struct {
 	// Vault address, approle login credentialials to authenticate with Vault,
 	// and the paths where secrets are to be found
 	VaultAddress             string `env:"VAULT_ADDRESS"                 default:"localhost:8200"               description:"Vault address"                                           long:"vault-address"`
-	VaultApproleRoleIDFile   string `env:"VAULT_APPROLE_ROLE_ID_FILE"    default:"/tmp/role"                    description:"AppRole role id file path to authenticate with Vault"    long:"vault-approle-role-id"`
-	VaultApproleSecretIDFile string `env:"VAULT_APPROLE_SECRET_ID_FILE"  default:"/tmp/secret"                  description:"AppRole secret id file path to authenticate with Vault"  long:"vault-approle-secret-id-file"`
+	VaultApproleRoleID       string `env:"VAULT_APPROLE_ROLE_ID"         required:"true"                        description:"AppRole role id to authenticate with Vault"              long:"vault-approle-role-id"`
+	VaultApproleSecretIDFile string `env:"VAULT_APPROLE_SECRET_ID_FILE"  default:"path/to/wrapping-token"       description:"AppRole secret id file path to authenticate with Vault"  long:"vault-approle-secret-id-file"`
 	VaultDatabaseCredsPath   string `env:"VAULT_DATABASE_CREDS_PATH"     default:"database/creds/dev-readonly"  description:"Temporary database credentials will be generated here"   long:"vault-database-creds-path"`
 	VaultAPIKeyPath          string `env:"VAULT_API_KEY_PATH"            default:"kv-v2/data/api-key"           description:"Path to the api key used by 'secure-sevice'"             long:"vault-api-key-path"`
 
@@ -49,15 +48,12 @@ func main() {
 		log.Fatalf("Unable to parse environment variables: %v\n", err)
 	}
 
-	// docker places an AppRoleID in a file before the application is started
-	role, err := fetchRoleFromFile(env.VaultApproleRoleIDFile)
-
-	//ctx := context.Background()
+	ctx := context.Background()
 
 	// vault
 	vault, err := NewVaultAppRoleClient(
 		env.VaultAddress,
-		role,
+		env.VaultApproleRoleID,
 		env.VaultApproleSecretIDFile,
 		env.VaultDatabaseCredsPath,
 		env.VaultAPIKeyPath,
@@ -66,7 +62,6 @@ func main() {
 		log.Fatalf("Unable to initialize vault connection @ %s: %v\n", env.VaultAddress, err)
 	}
 
-<<<<<<< HEAD
 	// database
 	database, err := NewDatabase(
 		ctx,
@@ -82,30 +77,10 @@ func main() {
 	defer func() {
 		_ = database.Close()
 	}()
-=======
-	// keep Vault connection alive
-	go vault.RenewVaultLogin()
-
-	//// database
-	//database, err := NewDatabase(
-	//	ctx,
-	//	env.DatabaseHostname,
-	//	env.DatabasePort,
-	//	env.DatabaseName,
-	//	env.DatabaseTimeout,
-	//	vault,
-	//)
-	//if err != nil {
-	//	log.Fatalf("Unable to connect to database @ %s:%s: %v\n", env.DatabaseHostname, env.DatabasePort, err)
-	//}
-	//defer func() {
-	//	_ = database.Close()
-	//}()
->>>>>>> 04a58e7 (wip)
 
 	// handlers & routes
 	h := Handlers{
-		//database:             database,
+		database:             database,
 		vault:                vault,
 		secureServiceAddress: env.SecureServiceAddress,
 	}
@@ -119,12 +94,4 @@ func main() {
 	r.GET("/products", h.GetProducts)
 
 	r.Run(env.MyAddress)
-}
-
-func fetchRoleFromFile(p string) (string, error) {
-	role, err := ioutil.ReadFile(p)
-	if err != nil {
-		return "", fmt.Errorf("unable to retrieve Vault role from %s: %w", p, err)
-	}
-	return string(role), nil
 }
