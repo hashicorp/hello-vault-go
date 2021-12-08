@@ -11,7 +11,7 @@ import (
 	_ "github.com/lib/pq"
 )
 
-type DatabaseParamters struct {
+type DatabaseParameters struct {
 	hostname string
 	port     string
 	name     string

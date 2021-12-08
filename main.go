@@ -84,7 +84,7 @@ func run(ctx context.Context, env Environment) error {
 
 	database, err := NewDatabase(
 		ctx,
-		DatabaseParamters{
+		DatabaseParameters{
 			hostname: env.DatabaseHostname,
 			port:     env.DatabasePort,
 			name:     env.DatabaseName,
