@@ -27,12 +27,11 @@ type DatabaseCredentials struct {
 type Database struct {
 	connection      *sql.DB
 	connectionMutex sync.Mutex
-	parameters      DatabaseParamters
-	vault           *Vault
+	parameters      DatabaseParameters
 }
 
 // NewDatabase establishes a database connection with the given Vault credentials
-func NewDatabase(ctx context.Context, parameters DatabaseParamters, credentials DatabaseCredentials) (*Database, error) {
+func NewDatabase(ctx context.Context, parameters DatabaseParameters, credentials DatabaseCredentials) (*Database, error) {
 	database := &Database{
 		parameters:      parameters,
 		connection:      nil,
