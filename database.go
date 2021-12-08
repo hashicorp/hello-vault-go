@@ -110,7 +110,8 @@ type Product struct {
 }
 
 // GetProducts is a simple query function to demonstrate that we have
-// successfully established a database connection with the Vault credentials.
+// successfully established a database connection with the credentials from
+// Vault
 func (db *Database) GetProducts(ctx context.Context) ([]Product, error) {
 	const query = "SELECT id, name FROM products"
 
