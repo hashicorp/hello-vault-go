@@ -17,6 +17,12 @@ type DatabaseParamters struct {
 	timeout  time.Duration
 }
 
+// DatabaseCredentials is a set of dynamic credentials retrieved from Vault
+type DatabaseCredentials struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+}
+
 type Database struct {
 	connection      *sql.DB
 	connectionMutex sync.Mutex
@@ -24,20 +30,20 @@ type Database struct {
 	vault           *Vault
 }
 
-func NewDatabase(ctx context.Context, parameters DatabaseParamters, vault *Vault) (*Database, error) {
-	database := Database{
+// NewDatabase establishes a database connection with the given Vault credentials
+func NewDatabase(ctx context.Context, parameters DatabaseParamters, credentials DatabaseCredentials) (*Database, error) {
+	database := &Database{
 		parameters:      parameters,
 		connection:      nil,
 		connectionMutex: sync.Mutex{},
-		vault:           vault,
 	}
 
 	// establish the first connection
-	if err := database.Reconnect(ctx); err != nil {
+	if err := database.Reconnect(ctx, credentials); err != nil {
 		return nil, err
 	}
 
-	return &database, nil
+	return database, nil
 }
 
 func (db *Database) Close() error {
@@ -46,17 +52,12 @@ func (db *Database) Close() error {
 
 // Reconnect will be called periodically to refresh the database connection
 // since the dynamic credentials expire after some time, it will:
-//   1. construct a connection string using dynamic credentials from Vault
-//   2. establishe a database connection
+//   1. construct a connection string using the given credentials
+//   2. establish a database connection
 //   3. overwrite the existing connection with the new one behind a mutex
-func (db *Database) Reconnect(ctx context.Context) error {
-	ctx, cancel := context.WithTimeout(ctx, db.parameters.timeout)
-	defer cancel()
-
-	credentials, err := db.vault.GetDatabaseCredentials(ctx)
-	if err != nil {
-		return fmt.Errorf("unable to get database credentials: %w", err)
-	}
+func (db *Database) Reconnect(ctx context.Context, credentials DatabaseCredentials) error {
+	ctx, cancelContextFunc := context.WithTimeout(ctx, db.parameters.timeout)
+	defer cancelContextFunc()
 
 	connectionString := fmt.Sprintf(
 		"host=%s port=%s dbname=%s user=%s password=%s sslmode=disable",
