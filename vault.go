@@ -30,7 +30,7 @@ type Vault struct {
 // method, returning an authenticated client and the auth token itself, which
 // can be periodically renewed.
 func NewVaultAppRoleClient(ctx context.Context, parameters VaultParameters) (*Vault, *vault.Secret, error) {
-	log.Println("Connecting to vault @", parameters.address)
+	log.Println("connecting to vault @", parameters.address)
 
 	config := vault.DefaultConfig() // modify for more granular configuration
 	config.Address = parameters.address
@@ -49,6 +49,8 @@ func NewVaultAppRoleClient(ctx context.Context, parameters VaultParameters) (*Va
 	if err != nil {
 		return nil, nil, fmt.Errorf("vault login error: %w", err)
 	}
+
+	log.Println("connecting to vault: success!")
 
 	return vault, token, nil
 }
@@ -76,7 +78,7 @@ func (v *Vault) login(ctx context.Context) (*vault.Secret, error) {
 		return nil, fmt.Errorf("unable to initialize approle authentication method: %w", err)
 	}
 
-	log.Println("Attempting to log in to vault using RoleID", v.parameters.approleRoleID)
+	log.Println("logging in to vault using role id", v.parameters.approleRoleID)
 
 	authInfo, err := v.client.Auth().Login(ctx, appRoleAuth)
 	if err != nil {
@@ -86,38 +88,38 @@ func (v *Vault) login(ctx context.Context) (*vault.Secret, error) {
 		return nil, fmt.Errorf("no approle info was returned after login")
 	}
 
-	log.Println("Successfully logged in to vault")
+	log.Println("logging in to vault: success!")
 
 	return authInfo, nil
 }
 
 // GetSecretAPIKey fetches the latest version of secret api key from kv-v2
 func (v *Vault) GetSecretAPIKey(ctx context.Context) (map[string]interface{}, error) {
-	// path starting with secret/
+	log.Println("getting secret api key from vault")
+
 	secret, err := v.client.Logical().Read(v.parameters.apiKeyPath)
 	if err != nil {
 		return nil, fmt.Errorf("unable to read secret: %w", err)
 	}
-
-	log.Println("Got secret api key")
 
 	data, ok := secret.Data["data"].(map[string]interface{})
 	if !ok {
 		return nil, fmt.Errorf("malformed secret returned")
 	}
 
+	log.Println("getting secret api key from vault: success!")
+
 	return data, nil
 }
 
 // GetDatabaseCredentials retrieves a new set of temporary database credentials
 func (v *Vault) GetDatabaseCredentials(ctx context.Context) (DatabaseCredentials, *vault.Secret, error) {
-	// path starting with database/
+	log.Println("getting temporary database credentials from vault")
+
 	secret, err := v.client.Logical().Read(v.parameters.databaseCredentialsPath)
 	if err != nil {
 		return DatabaseCredentials{}, nil, fmt.Errorf("unable to read secret: %w", err)
 	}
-
-	log.Println("Got temporary database credentials")
 
 	credentialsBytes, err := json.Marshal(secret.Data)
 	if err != nil {
@@ -129,6 +131,8 @@ func (v *Vault) GetDatabaseCredentials(ctx context.Context) (DatabaseCredentials
 	if err := json.Unmarshal(credentialsBytes, &credentials); err != nil {
 		return DatabaseCredentials{}, nil, fmt.Errorf("unable to unmarshal credentials: %w", err)
 	}
+
+	log.Println("getting temporary database credentials from vault: success!")
 
 	// raw secret is included to renew database credentials
 	return credentials, secret, nil

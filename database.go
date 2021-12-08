@@ -60,7 +60,7 @@ func (db *Database) Reconnect(ctx context.Context, credentials DatabaseCredentia
 	defer cancelContextFunc()
 
 	log.Printf(
-		"Connecting to %q database @ %s:%s\n",
+		"connecting to %q database @ %s:%s\n",
 		db.parameters.name,
 		db.parameters.hostname,
 		db.parameters.port,
@@ -99,7 +99,7 @@ func (db *Database) Reconnect(ctx context.Context, credentials DatabaseCredentia
 	db.connection = connection
 	db.connectionMutex.Unlock()
 
-	log.Println("Successfully connected to database")
+	log.Printf("connecting to %q database: success!\n", db.parameters.name)
 
 	return nil
 }
