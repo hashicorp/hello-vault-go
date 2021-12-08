@@ -15,7 +15,7 @@ type Environment struct {
 	// The address of this service
 	MyAddress string `               env:"MY_ADDRESS"                    default:":8080"                        description:"Listen to http traffic on this tcp address"              long:"my-address"`
 
-	// Vault address, approle login credentialials, and secret locations
+	// Vault address, approle login credentials, and secret locations
 	VaultAddress             string `env:"VAULT_ADDRESS"                 default:"localhost:8200"               description:"Vault address"                                           long:"vault-address"`
 	VaultApproleRoleID       string `env:"VAULT_APPROLE_ROLE_ID"         required:"true"                        description:"AppRole role id to authenticate with Vault"              long:"vault-approle-role-id"`
 	VaultApproleSecretIDFile string `env:"VAULT_APPROLE_SECRET_ID_FILE"  default:"path/to/wrapping-token"       description:"AppRole secret id file path to authenticate with Vault"  long:"vault-approle-secret-id-file"`
