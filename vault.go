@@ -26,7 +26,9 @@ type Vault struct {
 	parameters VaultParameters
 }
 
-// NewVaultAppRoleClient logs in to Vault using AppRole authentication method, returns a client & the auth token
+// NewVaultAppRoleClient logs in to Vault using the AppRole authentication
+// method, returning an authenticated client and the auth token itself, which
+// can be periodically renewed.
 func NewVaultAppRoleClient(ctx context.Context, parameters VaultParameters) (*Vault, *vault.Secret, error) {
 	log.Println("Connecting to vault @", parameters.address)
 
