@@ -26,8 +26,10 @@ type Vault struct {
 	parameters VaultParameters
 }
 
-// NewVaultAppRoleClient returns a new client for interacting with Vault KVv2 secrets via AppRole authentication
+// NewVaultAppRoleClient logs in to Vault using AppRole authentication method, returns a client & the auth token
 func NewVaultAppRoleClient(ctx context.Context, parameters VaultParameters) (*Vault, *vault.Secret, error) {
+	log.Println("Connecting to vault @", parameters.address)
+
 	config := vault.DefaultConfig() // modify for more granular configuration
 	config.Address = parameters.address
 
@@ -72,6 +74,8 @@ func (v *Vault) login(ctx context.Context) (*vault.Secret, error) {
 		return nil, fmt.Errorf("unable to initialize approle authentication method: %w", err)
 	}
 
+	log.Println("Attempting to log in to vault using RoleID", v.parameters.approleRoleID)
+
 	authInfo, err := v.client.Auth().Login(ctx, appRoleAuth)
 	if err != nil {
 		return nil, fmt.Errorf("unable to login using approle auth method: %w", err)
@@ -79,6 +83,8 @@ func (v *Vault) login(ctx context.Context) (*vault.Secret, error) {
 	if authInfo == nil {
 		return nil, fmt.Errorf("no approle info was returned after login")
 	}
+
+	log.Println("Successfully logged in to vault")
 
 	return authInfo, nil
 }
@@ -91,7 +97,7 @@ func (v *Vault) GetSecretAPIKey(ctx context.Context) (map[string]interface{}, er
 		return nil, fmt.Errorf("unable to read secret: %w", err)
 	}
 
-	log.Println("got secret api key")
+	log.Println("Got secret api key")
 
 	data, ok := secret.Data["data"].(map[string]interface{})
 	if !ok {
@@ -109,7 +115,7 @@ func (v *Vault) GetDatabaseCredentials(ctx context.Context) (DatabaseCredentials
 		return DatabaseCredentials{}, nil, fmt.Errorf("unable to read secret: %w", err)
 	}
 
-	log.Println("got temporary database credentials")
+	log.Println("Got temporary database credentials")
 
 	credentialsBytes, err := json.Marshal(secret.Data)
 	if err != nil {

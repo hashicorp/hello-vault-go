@@ -23,6 +23,9 @@ import (
 // a freshly renewed token. See https://www.vaultproject.io/docs/enterprise/consistency#vault-1-7-mitigations
 // for several ways to mitigate this which are outside the scope of this code sample.
 func (v *Vault) RenewLoginPeriodically(ctx context.Context, authToken *vault.Secret) {
+	/* */ log.Println("RenewLoginPeriodically: begin")
+	defer log.Println("RenewLoginPeriodically: end")
+
 	currentAuthToken := authToken
 
 	for {
@@ -32,40 +35,47 @@ func (v *Vault) RenewLoginPeriodically(ctx context.Context, authToken *vault.Sec
 				return
 			}
 
-			log.Fatalf("renew error: %v\n", err) // simplified error handling
+			log.Fatalf("Renew error: %v\n", err) // simplified error handling
 		}
 
 		// the auth token's lease has expired and needs to be renewed
 		t, err := v.login(ctx)
 		if err != nil {
-			log.Fatalf("authentication error: %v\n", err) // simplified error handling
+			log.Fatalf("Authentication error: %v\n", err) // simplified error handling
 		}
 
 		currentAuthToken = t
 	}
 }
 
+// RenewDatabaseCredentialsPeriodically uses a similar mechnanism to the one
+// above in order to keep the database connnection alive after the database
+// token expires and needs to be renewed.
 func (v *Vault) RenewDatabaseCredentialsPeriodically(
 	ctx context.Context,
 	databaseToken *vault.Secret,
 	reconnect func(ctx context.Context, credentials DatabaseCredentials) error,
 ) {
+	/* */ log.Println("RenewDatabaseCredentialsPeriodically: begin")
+	defer log.Println("RenewDatabaseCredentialsPeriodically: end")
+
 	for {
 		currentDatabaseToken := databaseToken
 
 		for {
 			if err := v.renewTokenUntilMaxTTL(ctx, currentDatabaseToken, "database credentials"); err != nil {
+				// break out when shutdown is requested
 				if errors.Is(err, context.Canceled) {
 					return
 				}
 
-				log.Fatalf("renew error: %v\n", err) // simplified error handling
+				log.Fatalf("Renew error: %v\n", err) // simplified error handling
 			}
 
 			// database credentials have expired and need to be renewed
 			credentials, token, err := v.GetDatabaseCredentials(ctx)
 			if err != nil {
-				log.Fatalf("database credentials error: %v\n", err) // simplified error handling
+				log.Fatalf("Database credentials error: %v\n", err) // simplified error handling
 			}
 
 			reconnect(ctx, credentials)
@@ -79,8 +89,8 @@ func (v *Vault) RenewDatabaseCredentialsPeriodically(
 // periodically renew the given token when it is close to its 'token_ttl'
 // expiration time until it reaches its token_max_ttl expiration time.
 func (v *Vault) renewTokenUntilMaxTTL(ctx context.Context, token *vault.Secret, label string) error {
-	/* */ log.Printf("%s renew cycle: started\n", label)
-	defer log.Printf("%s renew cycle: the token can no longer be renewed\n", label)
+	/* */ log.Printf("Renew cycle for %s: started\n", label)
+	defer log.Printf("Renew cycle for %s: the token can no longer be renewed\n", label)
 
 	watcher, err := v.client.NewLifetimeWatcher(&vault.LifetimeWatcherInput{
 		Secret:    token,

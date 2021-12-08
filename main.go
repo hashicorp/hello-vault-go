@@ -33,6 +33,9 @@ type Environment struct {
 }
 
 func main() {
+	/* */ log.Println("Hello!")
+	defer log.Println("Goodbye!")
+
 	var env Environment
 
 	// parse & validate environment variables
@@ -44,20 +47,20 @@ func main() {
 		log.Fatalf("Unable to parse environment variables: %v\n", err)
 	}
 
-	ctx, cancelContextFunc := context.WithCancel(context.Background())
-	defer cancelContextFunc()
-
-	if err := run(ctx, env); err != nil {
+	if err := run(context.Background(), env); err != nil {
 		log.Fatalf("Error: %v\n", err)
 	}
-
-	log.Println("Goodbye!")
 }
 
 func run(ctx context.Context, env Environment) error {
-	// vault
-	log.Println("Connecting to vault @", env.VaultAddress)
+	// WARNING: the goroutines in this function have simplified error handling
+	// and could escape the scope of the function. Production applications
+	// may want to add more complex error handling and leak protection logic.
 
+	ctx, cancelContextFunc := context.WithCancel(ctx)
+	defer cancelContextFunc()
+
+	// vault
 	vault, token, err := NewVaultAppRoleClient(
 		ctx,
 		VaultParameters{
@@ -74,14 +77,10 @@ func run(ctx context.Context, env Environment) error {
 	go vault.RenewLoginPeriodically(ctx, token) // keep alive
 
 	// database
-	log.Println("Fetching database credentials")
-
 	credentials, secret, err := vault.GetDatabaseCredentials(ctx)
 	if err != nil {
 		return fmt.Errorf("unable to retrieve database credentials from vault: %w", err)
 	}
-
-	log.Printf("Connecting to %s database @ %s:%s\n", env.DatabaseName, env.DatabaseHostname, env.DatabasePort)
 
 	database, err := NewDatabase(
 		ctx,

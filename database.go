@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"log"
 	"sync"
 	"time"
 
@@ -59,6 +60,13 @@ func (db *Database) Reconnect(ctx context.Context, credentials DatabaseCredentia
 	ctx, cancelContextFunc := context.WithTimeout(ctx, db.parameters.timeout)
 	defer cancelContextFunc()
 
+	log.Printf(
+		"Connecting to %q database @ %s:%s\n",
+		db.parameters.name,
+		db.parameters.hostname,
+		db.parameters.port,
+	)
+
 	connectionString := fmt.Sprintf(
 		"host=%s port=%s dbname=%s user=%s password=%s sslmode=disable",
 		db.parameters.hostname,
@@ -91,6 +99,8 @@ func (db *Database) Reconnect(ctx context.Context, credentials DatabaseCredentia
 	db.connectionMutex.Lock()
 	db.connection = connection
 	db.connectionMutex.Unlock()
+
+	log.Println("Successfully connected to database")
 
 	return nil
 }
