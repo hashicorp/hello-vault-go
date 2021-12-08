@@ -112,10 +112,10 @@ type Product struct {
 // GetProducts is a simple query function to demonstrate that we have
 // successfully established a database connection with the Vault credentials.
 func (db *Database) GetProducts(ctx context.Context) ([]Product, error) {
-	/* */ db.connectionMutex.Lock()
-	defer db.connectionMutex.Unlock()
-
 	const query = "SELECT id, name FROM products"
+
+	db.connectionMutex.Lock()
+	defer db.connectionMutex.Unlock()
 
 	rows, err := db.connection.QueryContext(ctx, query)
 	if err != nil {
