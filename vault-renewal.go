@@ -49,7 +49,7 @@ func (v *Vault) RenewLoginPeriodically(ctx context.Context, authToken *vault.Sec
 }
 
 // RenewDatabaseCredentialsPeriodically uses a similar mechnanism to the one
-// above in order to keep the database connnection alive after the database
+// above in order to keep the database connection alive after the database
 // token expires and needs to be renewed.
 func (v *Vault) RenewDatabaseCredentialsPeriodically(
 	ctx context.Context,
