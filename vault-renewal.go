@@ -23,25 +23,25 @@ import (
 // a freshly renewed token. See https://www.vaultproject.io/docs/enterprise/consistency#vault-1-7-mitigations
 // for several ways to mitigate this which are outside the scope of this code sample.
 func (v *Vault) RenewLoginPeriodically(ctx context.Context, authToken *vault.Secret) {
-	/* */ log.Println("RenewLoginPeriodically: begin")
-	defer log.Println("RenewLoginPeriodically: end")
+	/* */ log.Println("auth token renew / login loop: begin")
+	defer log.Println("auth token renew / login loop: end")
 
 	currentAuthToken := authToken
 
 	for {
-		if err := v.renewTokenUntilMaxTTL(ctx, currentAuthToken, "auth token"); err != nil {
+		if err := v.renewUntilMaxTTL(ctx, currentAuthToken, "auth token"); err != nil {
 			// break out when shutdown is requested
 			if errors.Is(err, context.Canceled) {
 				return
 			}
 
-			log.Fatalf("Renew error: %v\n", err) // simplified error handling
+			log.Fatalf("auth token renew error: %v\n", err) // simplified error handling
 		}
 
 		// the auth token's lease has expired and needs to be renewed
 		t, err := v.login(ctx)
 		if err != nil {
-			log.Fatalf("Authentication error: %v\n", err) // simplified error handling
+			log.Fatalf("login authentication error: %v\n", err) // simplified error handling
 		}
 
 		currentAuthToken = t
@@ -50,51 +50,51 @@ func (v *Vault) RenewLoginPeriodically(ctx context.Context, authToken *vault.Sec
 
 // RenewDatabaseCredentialsPeriodically uses a similar mechnanism to the one
 // above in order to keep the database connection alive after the database
-// token expires and needs to be renewed.
+// dynamic secret expires and needs to be renewed or recreated
 func (v *Vault) RenewDatabaseCredentialsPeriodically(
 	ctx context.Context,
-	databaseToken *vault.Secret,
+	databaseSecret *vault.Secret,
 	reconnect func(ctx context.Context, credentials DatabaseCredentials) error,
 ) {
-	/* */ log.Println("RenewDatabaseCredentialsPeriodically: begin")
-	defer log.Println("RenewDatabaseCredentialsPeriodically: end")
+	/* */ log.Println("database credentials renew / reconnect loop: begin")
+	defer log.Println("database credentials renew / reconnect loop: end")
 
 	for {
-		currentDatabaseToken := databaseToken
+		currentDatabaseSecret := databaseSecret
 
 		for {
-			if err := v.renewTokenUntilMaxTTL(ctx, currentDatabaseToken, "database credentials"); err != nil {
+			if err := v.renewUntilMaxTTL(ctx, currentDatabaseSecret, "database credentials"); err != nil {
 				// break out when shutdown is requested
 				if errors.Is(err, context.Canceled) {
 					return
 				}
 
-				log.Fatalf("Renew error: %v\n", err) // simplified error handling
+				log.Fatalf("database credentials renew error: %v\n", err) // simplified error handling
 			}
 
 			// database credentials have expired and need to be renewed
-			credentials, token, err := v.GetDatabaseCredentials(ctx)
+			credentials, secret, err := v.GetDatabaseCredentials(ctx)
 			if err != nil {
-				log.Fatalf("Database credentials error: %v\n", err) // simplified error handling
+				log.Fatalf("database credentials error: %v\n", err) // simplified error handling
 			}
 
 			reconnect(ctx, credentials)
 
-			currentDatabaseToken = token
+			currentDatabaseSecret = secret
 		}
 	}
 }
 
-// renewTokenUntilMaxTTL is a blocking helper function that uses LifetimeWatcher to
-// periodically renew the given token when it is close to its 'token_ttl'
-// expiration time until it reaches its token_max_ttl expiration time.
-func (v *Vault) renewTokenUntilMaxTTL(ctx context.Context, token *vault.Secret, label string) error {
-	/* */ log.Printf("Renew cycle for %s: started\n", label)
-	defer log.Printf("Renew cycle for %s: the token can no longer be renewed\n", label)
+// renewUntilMaxTTL is a blocking helper function that uses LifetimeWatcher to
+// periodically renew the given secret or token when it is close to its
+// 'token_ttl' lease expiration time until it reaches its 'token_max_ttl' lease
+// expiration time.
+func (v *Vault) renewUntilMaxTTL(ctx context.Context, secret *vault.Secret, label string) error {
+	/* */ log.Printf("%s renew cycle: started\n", label)
+	defer log.Printf("%s renew cycle: the secret can no longer be renewed\n", label)
 
 	watcher, err := v.client.NewLifetimeWatcher(&vault.LifetimeWatcherInput{
-		Secret:    token,
-		Increment: 3600, // learn more: https://www.vaultproject.io/docs/concepts/lease#lease-durations-and-renewal
+		Secret: secret,
 	})
 	if err != nil {
 		return fmt.Errorf("unable to initialize %s lifetime watcher: %w", label, err)
