@@ -17,9 +17,9 @@ vault policy write dev-policy /vault/config/dev-policy.hcl
 vault auth enable approle
 
 # create role with policies and ttls
-# secret_id_ttl determines how long the unwrapped secret_id will be valid for
-# token_ttl determines how long the login token is valid
-# token_max_ttl determines how long the login token can be renewed
+# - secret_id_ttl:   determines how long the unwrapped secret_id will be valid for
+# - token_ttl:       determines how long the login token is valid
+# - token_max_ttl:   determines how long the login token can be renewed
 # read more here about parameters here:
 # https://www.vaultproject.io/api/auth/approle#parameters
 vault write auth/approle/role/dev-role \
