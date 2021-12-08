@@ -60,7 +60,7 @@ func (h *Handlers) CreatePayment(c *gin.Context) {
 
 // (GET /products) : demonstrates database authentication with dynamic secrets
 func (h *Handlers) GetProducts(c *gin.Context) {
-	products, err := h.database.GetProducts(c.Copy().Request.Context())
+	products, err := h.database.GetProducts(c.Request.Context())
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
