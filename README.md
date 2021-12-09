@@ -1,38 +1,115 @@
 # hello-vault-go
 
 This is a sample application that demonstrates how to authenticate to and
-retrieve secrets from HashiCorp [Vault](https://www.vaultproject.io/).
+retrieve secrets from HashiCorp [Vault][vault].
 
 ## Prerequisites
 
-1. [Docker](https://docs.docker.com/get-docker/) to easily run the application
-   in the same environment regardless of your local operating system.
-2. [Docker-Compose](https://docs.docker.com/compose/install/) to easily set up
-   all the components of the demo (the application's web server, the Vault
-   server, the database, etc.) all at once.
+1. [`docker`][docker] to easily run the application in the same environment
+   regardless of your local operating system
+1. [`docker compose`][docker-compose] to easily set up all the components of
+   the demo (the application's web server, the Vault server, the database, etc.)
+   all at once
+1. [`curl`][curl] to test our endpoints
+1. [`jq`][jq] _(optional)_ for prettier `JSON` output
 
-## How To Run
+## Try it out
 
-**WARNING** This Vault server is configured to run in "dev" mode, an insecure
-setting that allows for easy testing.
+> **WARNING**: The Vault server used in this setup is configured to run in
+> `-dev` mode, an insecure setting that allows for easy testing.
 
-1. Clone this repo and `cd` into it.
-2. Run `./run.sh`. This will start up all the components of the application
-   using Docker-Compose. The application will be listening on port 8080.
-3. `curl http://localhost:8080/products` to confirm it's working. If you get
-   back a list of fake products, the application and all of its dependencies
-   were built and run successfully.
+### 1. Bring up the services
 
-## API Endpoints
+This step may take a few minutes to download the necessary dependencies.
 
-The application has a variety of REST API endpoints that allow you to explore
-some of Vault's features.
+```sh
+$ ./run.sh
+[+] Running 7/7
+ ⠿ Network hello-vault-go_default                Created      0.0s
+ ⠿ Volume "hello-vault-go_trusted_orchestrator"  Created      0.0s
+ ⠿ Volume "hello-vault-go_dbdata"                Created      0.0s
+ ⠿ Container hello-vault-go-db-1                 Started      0.5s
+ ⠿ Container hello-vault-go-secure-service-1     Started      0.5s
+ ⠿ Container hello-vault-go-vault-1              Started      1.3s
+ ⠿ Container hello-vault-go-app-1                Started      2.0s
 
-Try running these sample `curl` commands to see the result (you can pipe to `jq`
-to make it prettier), then take a peek at the code to see how the app integrates
-with Vault to accomplish this.
+```
 
-| Feature         | `curl`                                        | Description                                                                                                                                                    |
-|-----------------|-----------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Static Secrets  | `curl -x POST http://localhost:8080/payments` | Makes a request to another service's restricted API endpoint using an API key value stored in Vault's static secrets engine.                                   |
-| Dynamic Secrets | `curl http://localhost:8080/products`         | Uses Vault's database secrets engine to generate dynamic database credentials, which are then used to connect to and retrieve data from a PostgreSQL database. |
+#### 1.1 Verify that the services are up and running:
+
+```bash
+$ docker ps --format "table {{.ID}}\t{{.Status}}\t{{.Names}}"
+CONTAINER ID   STATUS         NAMES
+895946f1e1e3   Up 2 minutes   hello-vault-go-app-1
+565a569e8a5a   Up 2 minutes   hello-vault-go-vault-1
+d446dbdc95aa   Up 2 minutes   hello-vault-go-db-1
+f5263ce13b4b   Up 2 minutes   hello-vault-go-secure-service-1
+```
+
+### 2. Try out `POST /payments` endpoint (static secrets workflow)
+
+The `POST /payments` endpoint is a simple example of static secrets workflow.
+Our service will make a request to another service's restricted API endpoint
+using an API key value stored in Vault's static secrets engine.
+
+```bash
+$ curl -s -X POST http://localhost:8080/payments | jq
+{
+  "message": "hello world!"
+}
+```
+
+#### 2.1. Examine the logs
+
+```bash
+$ docker logs hello-vault-go-app-1
+...
+2021/12/09 19:56:36 getting secret api key from vault
+2021/12/09 19:56:36 getting secret api key from vault: success!
+[GIN] 2021/12/09 - 19:56:36 | 200 |    3.219167ms |    192.168.96.1 | POST     "/payments"
+```
+
+### 3. Try out `GET /products` endpoint (dynamic secrets workflow)
+
+The `GET /products` endpoint is a simple example of dynamic secrets workflow.
+Our application uses Vault's database secrets engine to generate dynamic database credentials, which are then used to connect to and retrieve data from a PostgreSQL database.
+
+```bash
+curl -s -X GET http://localhost:8080/products | jq
+[
+  {
+    "id": 1,
+    "name": "Rustic Webcam"
+  },
+  {
+    "id": 2,
+    "name": "Haunted Coloring Book"
+  }
+]
+```
+
+#### 3.1. Examine the logs
+
+```bash
+$ docker logs hello-vault-go-app-1
+...
+2021/12/09 19:52:58 getting temporary database credentials from vault
+2021/12/09 19:52:58 getting temporary database credentials from vault: success!
+2021/12/09 19:52:58 connecting to "postgres" database @ db:5432
+2021/12/09 19:52:58 connecting to "postgres" database: success!
+...
+[GIN] 2021/12/09 - 19:57:22 | 200 |    2.559083ms |    192.168.96.1 | GET      "/products"
+```
+
+## API
+
+| Endpoint             | Description                                                            |
+|----------------------|------------------------------------------------------------------------|
+| **POST** `/payments` | A simple example of Vault static secrets workflow (see example above)  |
+| **GET** `/products`  | A simple example of Vault dynamic secrets workflow (see example above) |
+
+[vault]: https://www.vaultproject.io/
+[docker]: https://docs.docker.com/get-docker/
+[docker-compose]: https://docs.docker.com/compose/install/
+[curl]: https://curl.se/
+[jq]: https://stedolan.github.io/jq/
