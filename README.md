@@ -7,9 +7,9 @@ retrieve secrets from HashiCorp [Vault][vault].
 
 1. [`docker`][docker] to easily run the application in the same environment
    regardless of your local operating system
-1. [`docker compose`][docker-compose] to easily set up all the components of
-   the demo (the application's web server, the Vault server, the database, etc.)
-   all at once
+1. [`docker compose`][docker-compose] to easily set up all the components of the
+   demo (the application's web server, the Vault server, the database, etc.) all
+   at once
 1. [`curl`][curl] to test our endpoints
 1. [`jq`][jq] _(optional)_ for prettier `JSON` output
 
@@ -68,7 +68,9 @@ $ docker logs hello-vault-go-app-1
 ### 3. Try out `GET /products` endpoint (dynamic secrets workflow)
 
 The `GET /products` endpoint is a simple example of dynamic secrets workflow.
-Our application uses Vault's database secrets engine to generate dynamic database credentials, which are then used to connect to and retrieve data from a PostgreSQL database.
+Our application uses Vault's database secrets engine to generate dynamic
+database credentials, which are then used to connect to and retrieve data from a
+PostgreSQL database.
 
 ```bash
 curl -s -X GET http://localhost:8080/products | jq
@@ -98,7 +100,7 @@ $ docker logs hello-vault-go-app-1
 ## API
 
 | Endpoint             | Description                                                            |
-|----------------------|------------------------------------------------------------------------|
+| -------------------- | ---------------------------------------------------------------------- |
 | **POST** `/payments` | A simple example of Vault static secrets workflow (see example above)  |
 | **GET** `/products`  | A simple example of Vault dynamic secrets workflow (see example above) |
 
