@@ -44,11 +44,11 @@ func main() {
 		if flags.WroteHelp(err) {
 			os.Exit(0)
 		}
-		log.Fatalf("unable to parse environment variables: %v\n", err)
+		log.Fatalf("unable to parse environment variables: %v", err)
 	}
 
 	if err := run(context.Background(), env); err != nil {
-		log.Fatalf("error: %v\n", err)
+		log.Fatalf("error: %v", err)
 	}
 }
 

@@ -35,13 +35,13 @@ func (v *Vault) RenewLoginPeriodically(ctx context.Context, authToken *vault.Sec
 				return
 			}
 
-			log.Fatalf("auth token renew error: %v\n", err) // simplified error handling
+			log.Fatalf("auth token renew error: %v", err) // simplified error handling
 		}
 
 		// the auth token's lease has expired and needs to be renewed
 		t, err := v.login(ctx)
 		if err != nil {
-			log.Fatalf("login authentication error: %v\n", err) // simplified error handling
+			log.Fatalf("login authentication error: %v", err) // simplified error handling
 		}
 
 		currentAuthToken = t
@@ -69,13 +69,13 @@ func (v *Vault) RenewDatabaseCredentialsPeriodically(
 					return
 				}
 
-				log.Fatalf("database credentials renew error: %v\n", err) // simplified error handling
+				log.Fatalf("database credentials renew error: %v", err) // simplified error handling
 			}
 
 			// database credentials have expired and need to be renewed
 			credentials, secret, err := v.GetDatabaseCredentials(ctx)
 			if err != nil {
-				log.Fatalf("database credentials error: %v\n", err) // simplified error handling
+				log.Fatalf("database credentials error: %v", err) // simplified error handling
 			}
 
 			reconnect(ctx, credentials)
@@ -90,8 +90,8 @@ func (v *Vault) RenewDatabaseCredentialsPeriodically(
 // 'token_ttl' lease expiration time until it reaches its 'token_max_ttl' lease
 // expiration time.
 func (v *Vault) renewUntilMaxTTL(ctx context.Context, secret *vault.Secret, label string) error {
-	/* */ log.Printf("%s renew cycle: started\n", label)
-	defer log.Printf("%s renew cycle: the secret can no longer be renewed\n", label)
+	/* */ log.Printf("%s renew cycle: started", label)
+	defer log.Printf("%s renew cycle: the secret can no longer be renewed", label)
 
 	watcher, err := v.client.NewLifetimeWatcher(&vault.LifetimeWatcherInput{
 		Secret: secret,
