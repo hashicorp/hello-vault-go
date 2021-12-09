@@ -22,8 +22,11 @@ retrieve secrets from HashiCorp [Vault][vault].
 
 This step may take a few minutes to download the necessary dependencies.
 
-```sh
-$ ./run.sh
+```bash
+./run.sh
+```
+
+```
 [+] Running 7/7
  ⠿ Network hello-vault-go_default                Created      0.0s
  ⠿ Volume "hello-vault-go_trusted_orchestrator"  Created      0.0s
@@ -35,13 +38,18 @@ $ ./run.sh
 
 ```
 
+_(Optional):_ verify that the services started successfully
+
 ```bash
-$ docker ps --format "table {{.ID}}\t{{.Status}}\t{{.Names}}"
-CONTAINER ID   STATUS         NAMES
-895946f1e1e3   Up 2 minutes   hello-vault-go-app-1
-565a569e8a5a   Up 2 minutes   hello-vault-go-vault-1
-d446dbdc95aa   Up 2 minutes   hello-vault-go-db-1
-f5263ce13b4b   Up 2 minutes   hello-vault-go-secure-service-1
+docker ps --format "table {{.ID}}\t{{.Status}}\t{{.Names}}\t{{.Ports}}"
+```
+
+```bash
+CONTAINER ID   STATUS         NAMES                            PORTS
+895946f1e1e3   Up 2 minutes   hello-vault-go-app-1             0.0.0.0:8080->8080/tcp
+565a569e8a5a   Up 2 minutes   hello-vault-go-vault-1           0.0.0.0:8200->8200/tcp
+d446dbdc95aa   Up 2 minutes   hello-vault-go-db-1              0.0.0.0:5432->5432/tcp
+f5263ce13b4b   Up 2 minutes   hello-vault-go-secure-service-1  0.0.0.0:1717->80/tcp
 ```
 
 ### 2. Try out `POST /payments` endpoint (static secrets workflow)
@@ -51,14 +59,22 @@ Our service will make a request to another service's restricted API endpoint
 using an API key value stored in Vault's static secrets engine.
 
 ```bash
-$ curl -s -X POST http://localhost:8080/payments | jq
+curl -s -X POST http://localhost:8080/payments | jq
+```
+
+```json
 {
   "message": "hello world!"
 }
 ```
 
+_(Optional):_ examine the logs
+
 ```bash
-$ docker logs hello-vault-go-app-1
+docker logs hello-vault-go-app-1
+```
+
+```log
 ...
 2021/12/09 19:56:36 getting secret api key from vault
 2021/12/09 19:56:36 getting secret api key from vault: success!
@@ -74,6 +90,9 @@ PostgreSQL database.
 
 ```bash
 curl -s -X GET http://localhost:8080/products | jq
+```
+
+```json
 [
   {
     "id": 1,
@@ -86,9 +105,13 @@ curl -s -X GET http://localhost:8080/products | jq
 ]
 ```
 
+_(Optional):_ Examine the logs
+
 ```bash
-$ docker logs hello-vault-go-app-1
-...
+docker logs hello-vault-go-app-1
+```
+
+```log
 2021/12/09 19:52:58 getting temporary database credentials from vault
 2021/12/09 19:52:58 getting temporary database credentials from vault: success!
 2021/12/09 19:52:58 connecting to "postgres" database @ db:5432
