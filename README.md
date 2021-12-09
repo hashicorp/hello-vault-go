@@ -54,9 +54,9 @@ f5263ce13b4b   Up 2 minutes   hello-vault-go-secure-service-1  0.0.0.0:1717->80/
 
 ### 2. Try out `POST /payments` endpoint (static secrets workflow)
 
-`POST /payments` endpoint is a simple example of static secrets workflow. Our
-service will make a request to another service's restricted API endpoint using
-an API key value stored in Vault's static secrets engine.
+`POST /payments` endpoint is a simple example of the static secrets workflow.
+Our service will make a request to another service's restricted API endpoint
+using an API key value stored in Vault's static secrets engine.
 
 ```bash
 curl -s -X POST http://localhost:8080/payments | jq
@@ -83,9 +83,9 @@ docker logs hello-vault-go-app-1
 
 ### 3. Try out `GET /products` endpoint (dynamic secrets workflow)
 
-`GET /products` endpoint is a simple example of dynamic secrets workflow. Our
-application uses Vault's database secrets engine to generate dynamic database
-credentials, which are then used to connect to and retrieve data from a
+`GET /products` endpoint is a simple example of the dynamic secrets workflow.
+Our application uses Vault's database secrets engine to generate dynamic
+database credentials, which are then used to connect to and retrieve data from a
 PostgreSQL database.
 
 ```bash
