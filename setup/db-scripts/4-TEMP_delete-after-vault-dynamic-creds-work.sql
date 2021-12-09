@@ -1,2 +1,0 @@
-CREATE ROLE tmptmp WITH LOGIN PASSWORD 'temp' VALID UNTIL '2021-12-20';
-GRANT readonly TO "tmptmp";
