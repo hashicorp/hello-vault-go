@@ -44,7 +44,7 @@ _(Optional):_ verify that the services started successfully
 docker ps --format "table {{.ID}}\t{{.Status}}\t{{.Names}}\t{{.Ports}}"
 ```
 
-```bash
+```
 CONTAINER ID   STATUS         NAMES                            PORTS
 895946f1e1e3   Up 2 minutes   hello-vault-go-app-1             0.0.0.0:8080->8080/tcp
 565a569e8a5a   Up 2 minutes   hello-vault-go-vault-1           0.0.0.0:8200->8200/tcp
