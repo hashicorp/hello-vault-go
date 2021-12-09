@@ -105,7 +105,7 @@ curl -s -X GET http://localhost:8080/products | jq
 ]
 ```
 
-_(Optional):_ Examine the logs
+_(Optional):_ examine the logs
 
 ```bash
 docker logs hello-vault-go-app-1
