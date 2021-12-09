@@ -104,8 +104,8 @@ $ docker logs hello-vault-go-app-1
 | **POST** `/payments` | A simple example of Vault static secrets workflow (see example above)  |
 | **GET** `/products`  | A simple example of Vault dynamic secrets workflow (see example above) |
 
-[vault]: https://www.vaultproject.io/
-[docker]: https://docs.docker.com/get-docker/
-[docker-compose]: https://docs.docker.com/compose/install/
-[curl]: https://curl.se/
-[jq]: https://stedolan.github.io/jq/
+[vault]:           https://www.vaultproject.io/
+[docker]:          https://docs.docker.com/get-docker/
+[docker-compose]:  https://docs.docker.com/compose/install/
+[curl]:            https://curl.se/
+[jq]:              https://stedolan.github.io/jq/
