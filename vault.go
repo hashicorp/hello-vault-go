@@ -30,7 +30,7 @@ type Vault struct {
 // method, returning an authenticated client and the auth token itself, which
 // can be periodically renewed.
 func NewVaultAppRoleClient(ctx context.Context, parameters VaultParameters) (*Vault, *vault.Secret, error) {
-	log.Println("connecting to vault @", parameters.address)
+	log.Printf("connecting to vault @ %s", parameters.address)
 
 	config := vault.DefaultConfig() // modify for more granular configuration
 	config.Address = parameters.address
@@ -78,7 +78,7 @@ func (v *Vault) login(ctx context.Context) (*vault.Secret, error) {
 		return nil, fmt.Errorf("unable to initialize approle authentication method: %w", err)
 	}
 
-	log.Println("logging in to vault using role id", v.parameters.approleRoleID)
+	log.Printf("logging in to vault; RoleID: %s", v.parameters.approleRoleID)
 
 	authInfo, err := v.client.Auth().Login(ctx, appRoleAuth)
 	if err != nil {
