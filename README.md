@@ -34,5 +34,5 @@ with Vault to accomplish this.
 
 | Feature         | `curl`                                        | Description                                                                                                                                                    |
 |-----------------|-----------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Static Secrets  | `curl -x POST http://localhost:8080/payments` | Makes a request to another service's restricted API endpoint, using the API key that we just added to Vault's static secrets engine.                           |
+| Static Secrets  | `curl -x POST http://localhost:8080/payments` | Makes a request to another service's restricted API endpoint using an API key value stored in Vault's static secrets engine.                                   |
 | Dynamic Secrets | `curl http://localhost:8080/products`         | Uses Vault's database secrets engine to generate dynamic database credentials, which are then used to connect to and retrieve data from a PostgreSQL database. |
