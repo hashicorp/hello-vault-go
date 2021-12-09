@@ -35,8 +35,6 @@ $ ./run.sh
 
 ```
 
-#### 1.1 Verify that the services are up and running:
-
 ```bash
 $ docker ps --format "table {{.ID}}\t{{.Status}}\t{{.Names}}"
 CONTAINER ID   STATUS         NAMES
@@ -58,8 +56,6 @@ $ curl -s -X POST http://localhost:8080/payments | jq
   "message": "hello world!"
 }
 ```
-
-#### 2.1. Examine the logs
 
 ```bash
 $ docker logs hello-vault-go-app-1
@@ -87,8 +83,6 @@ curl -s -X GET http://localhost:8080/products | jq
   }
 ]
 ```
-
-#### 3.1. Examine the logs
 
 ```bash
 $ docker logs hello-vault-go-app-1
