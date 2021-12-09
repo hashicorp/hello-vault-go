@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
 	"time"
@@ -10,33 +11,31 @@ import (
 	"github.com/jessevdk/go-flags"
 )
 
-// Environment describes the environment variables (or equivalent command-line
-// flags) that will be parsed and populated at startup, the default values will
-// be used unless overwritten
 type Environment struct {
 	// The address of this service
-	MyAddress string `               env:"MY_ADDRESS"                    default:":8080"                        description:"Listen to http traffic on this tcp address"              long:"my-address"`
+	MyAddress string `               env:"MY_ADDRESS"                    default:":8080"                        description:"Listen to http traffic on this tcp address"             long:"my-address"`
 
-	// Vault address, approle login credentialials to authenticate with Vault,
-	// and the paths where secrets are to be found
-	VaultAddress             string `env:"VAULT_ADDRESS"                 default:"localhost:8200"               description:"Vault address"                                           long:"vault-address"`
-	VaultApproleRoleID       string `env:"VAULT_APPROLE_ROLE_ID"         required:"true"                        description:"AppRole role id to authenticate with Vault"              long:"vault-approle-role-id"`
-	VaultApproleSecretIDFile string `env:"VAULT_APPROLE_SECRET_ID_FILE"  default:"/tmp/secret"                  description:"AppRole secret id file path to authenticate with Vault"  long:"vault-approle-secret-id-file"`
-	VaultDatabaseCredsPath   string `env:"VAULT_DATABASE_CREDS_PATH"     default:"database/creds/dev-readonly"  description:"Temporary database credentials will be generated here"   long:"vault-database-creds-path"`
-	VaultAPIKeyPath          string `env:"VAULT_API_KEY_PATH"            default:"kv-v2/data/api-key"           description:"Path to the api key used by 'secure-sevice'"             long:"vault-api-key-path"`
+	// Vault address, approle login credentials, and secret locations
+	VaultAddress             string `env:"VAULT_ADDRESS"                 default:"localhost:8200"               description:"Vault address"                                          long:"vault-address"`
+	VaultApproleRoleID       string `env:"VAULT_APPROLE_ROLE_ID"         required:"true"                        description:"AppRole RoleID to log in to Vault"                      long:"vault-approle-role-id"`
+	VaultApproleSecretIDFile string `env:"VAULT_APPROLE_SECRET_ID_FILE"  default:"/tmp/secret"                  description:"AppRole SecretID file path to log in to Vault"          long:"vault-approle-secret-id-file"`
+	VaultAPIKeyPath          string `env:"VAULT_API_KEY_PATH"            default:"kv-v2/data/api-key"           description:"Path to the API key used by 'secure-sevice'"            long:"vault-api-key-path"`
+	VaultDatabaseCredsPath   string `env:"VAULT_DATABASE_CREDS_PATH"     default:"database/creds/dev-readonly"  description:"Temporary database credentials will be generated here"  long:"vault-database-creds-path"`
 
 	// We will connect to this database using Vault-generated dynamic credentials
-	DatabaseHostname string        ` env:"DATABASE_HOSTNAME"             required:"true"                        description:"PostgreSQL database hostname"                            long:"database-hostname"`
-	DatabasePort     string        ` env:"DATABASE_PORT"                 default:"5432"                         description:"PostgreSQL database port"                                long:"database-port"`
-	DatabaseName     string        ` env:"DATABASE_NAME"                 default:"postgres"                     description:"PostgreSQL database name"                                long:"database-name"`
-	DatabaseTimeout  time.Duration ` env:"DATABASE_TIMEOUT"              default:"10s"                          description:"PostgreSQL database connection timeout"                  long:"database-timeout"`
+	DatabaseHostname string        ` env:"DATABASE_HOSTNAME"             required:"true"                        description:"PostgreSQL database hostname"                           long:"database-hostname"`
+	DatabasePort     string        ` env:"DATABASE_PORT"                 default:"5432"                         description:"PostgreSQL database port"                               long:"database-port"`
+	DatabaseName     string        ` env:"DATABASE_NAME"                 default:"postgres"                     description:"PostgreSQL database name"                               long:"database-name"`
+	DatabaseTimeout  time.Duration ` env:"DATABASE_TIMEOUT"              default:"10s"                          description:"PostgreSQL database connection timeout"                 long:"database-timeout"`
 
-	// A service which requires a specific secret API key (stored in Vault) to be
-	// provided in the request header
-	SecureServiceAddress string `    env:"SECURE_SERVICE_ADDRESS"        required:"true"                        description:"3rd party service that requires secure credentials"      long:"secure-service-address"`
+	// A service which requires a specific secret API key (stored in Vault)
+	SecureServiceAddress string `    env:"SECURE_SERVICE_ADDRESS"        required:"true"                        description:"3rd party service that requires secure credentials"     long:"secure-service-address"`
 }
 
 func main() {
+	log.Println("hello!")
+	defer log.Println("goodbye!")
+
 	var env Environment
 
 	// parse & validate environment variables
@@ -45,38 +44,61 @@ func main() {
 		if flags.WroteHelp(err) {
 			os.Exit(0)
 		}
-		log.Fatalf("Unable to parse environment variables: %v\n", err)
+		log.Fatalf("unable to parse environment variables: %v", err)
 	}
 
-	ctx := context.Background()
+	if err := run(context.Background(), env); err != nil {
+		log.Fatalf("error: %v", err)
+	}
+}
+
+func run(ctx context.Context, env Environment) error {
+	// WARNING: the goroutines in this function have simplified error handling
+	// and could escape the scope of the function. Production applications
+	// may want to add more complex error handling and leak protection logic.
+
+	ctx, cancelContextFunc := context.WithCancel(ctx)
+	defer cancelContextFunc()
 
 	// vault
-	vault, err := NewVaultAppRoleClient(
-		env.VaultAddress,
-		env.VaultApproleRoleID,
-		env.VaultApproleSecretIDFile,
-		env.VaultDatabaseCredsPath,
-		env.VaultAPIKeyPath,
+	vault, token, err := NewVaultAppRoleClient(
+		ctx,
+		VaultParameters{
+			env.VaultAddress,
+			env.VaultApproleRoleID,
+			env.VaultApproleSecretIDFile,
+			env.VaultAPIKeyPath,
+			env.VaultDatabaseCredsPath,
+		},
 	)
 	if err != nil {
-		log.Fatalf("Unable to initialize vault connection @ %s: %v\n", env.VaultAddress, err)
+		return fmt.Errorf("unable to initialize vault connection @ %s: %w", env.VaultAddress, err)
 	}
+	go vault.RenewLoginPeriodically(ctx, token) // keep alive
 
 	// database
+	credentials, secret, err := vault.GetDatabaseCredentials(ctx)
+	if err != nil {
+		return fmt.Errorf("unable to retrieve database credentials from vault: %w", err)
+	}
+
 	database, err := NewDatabase(
 		ctx,
-		env.DatabaseHostname,
-		env.DatabasePort,
-		env.DatabaseName,
-		env.DatabaseTimeout,
-		vault,
+		DatabaseParameters{
+			hostname: env.DatabaseHostname,
+			port:     env.DatabasePort,
+			name:     env.DatabaseName,
+			timeout:  env.DatabaseTimeout,
+		},
+		credentials,
 	)
 	if err != nil {
-		log.Fatalf("Unable to connect to database @ %s:%s: %v\n", env.DatabaseHostname, env.DatabasePort, err)
+		return fmt.Errorf("unable to connect to database @ %s:%s: %w", env.DatabaseHostname, env.DatabasePort, err)
 	}
 	defer func() {
 		_ = database.Close()
 	}()
+	go vault.RenewDatabaseCredentialsPeriodically(ctx, secret, database.Reconnect) // keep alive
 
 	// handlers & routes
 	h := Handlers{
@@ -94,4 +116,6 @@ func main() {
 	r.GET("/products", h.GetProducts)
 
 	r.Run(env.MyAddress)
+
+	return nil
 }

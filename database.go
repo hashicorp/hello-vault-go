@@ -4,38 +4,80 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"log"
+	"sync"
 	"time"
 
 	_ "github.com/lib/pq"
 )
 
-type Database struct {
-	connection *sql.DB
-	vault      *Vault
+type DatabaseParameters struct {
+	hostname string
+	port     string
+	name     string
+	timeout  time.Duration
 }
 
-// NewDatabase constructs a connection string using dynamic credentials from vault client & establishes a database connection
-func NewDatabase(ctx context.Context, hostname, port, name string, timeout time.Duration, vault *Vault) (*Database, error) {
-	ctx, cancel := context.WithTimeout(ctx, timeout)
-	defer cancel()
+// DatabaseCredentials is a set of dynamic credentials retrieved from Vault
+type DatabaseCredentials struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+}
 
-	credentials, err := vault.GetDatabaseCredentials(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("unable to get database credentials: %w", err)
+type Database struct {
+	connection      *sql.DB
+	connectionMutex sync.Mutex
+	parameters      DatabaseParameters
+}
+
+// NewDatabase establishes a database connection with the given Vault credentials
+func NewDatabase(ctx context.Context, parameters DatabaseParameters, credentials DatabaseCredentials) (*Database, error) {
+	database := &Database{
+		parameters:      parameters,
+		connection:      nil,
+		connectionMutex: sync.Mutex{},
 	}
 
-	connectionStr := fmt.Sprintf(
+	// establish the first connection
+	if err := database.Reconnect(ctx, credentials); err != nil {
+		return nil, err
+	}
+
+	return database, nil
+}
+
+func (db *Database) Close() error {
+	return db.Close()
+}
+
+// Reconnect will be called periodically to refresh the database connection
+// since the dynamic credentials expire after some time, it will:
+//   1. construct a connection string using the given credentials
+//   2. establish a database connection
+//   3. overwrite the existing connection with the new one behind a mutex
+func (db *Database) Reconnect(ctx context.Context, credentials DatabaseCredentials) error {
+	ctx, cancelContextFunc := context.WithTimeout(ctx, db.parameters.timeout)
+	defer cancelContextFunc()
+
+	log.Printf(
+		"connecting to %q database @ %s:%s",
+		db.parameters.name,
+		db.parameters.hostname,
+		db.parameters.port,
+	)
+
+	connectionString := fmt.Sprintf(
 		"host=%s port=%s dbname=%s user=%s password=%s sslmode=disable",
-		hostname,
-		port,
-		name,
+		db.parameters.hostname,
+		db.parameters.port,
+		db.parameters.name,
 		credentials.Username,
 		credentials.Password,
 	)
 
-	connection, err := sql.Open("postgres", connectionStr)
+	connection, err := sql.Open("postgres", connectionString)
 	if err != nil {
-		return nil, fmt.Errorf("unable to open database connection: %w", err)
+		return fmt.Errorf("unable to open database connection: %w", err)
 	}
 
 	// wait until the database is ready or timeout expires
@@ -48,18 +90,18 @@ func NewDatabase(ctx context.Context, hostname, port, name string, timeout time.
 		case <-time.After(500 * time.Millisecond):
 			continue
 		case <-ctx.Done():
-			return nil, fmt.Errorf("failed to successfully ping database before context timeout: %w", err)
+			return fmt.Errorf("failed to successfully ping database before context timeout: %w", err)
 		}
 	}
 
-	return &Database{
-		connection: connection,
-		vault:      vault,
-	}, nil
-}
+	// protect the connection swap with a mutex to avoid potential race conditions
+	db.connectionMutex.Lock()
+	db.connection = connection
+	db.connectionMutex.Unlock()
 
-func (db *Database) Close() error {
-	return db.Close()
+	log.Printf("connecting to %q database: success!", db.parameters.name)
+
+	return nil
 }
 
 type Product struct {
@@ -67,8 +109,14 @@ type Product struct {
 	Name string `json:"name"`
 }
 
+// GetProducts is a simple query function to demonstrate that we have
+// successfully established a database connection with the credentials from
+// Vault
 func (db *Database) GetProducts(ctx context.Context) ([]Product, error) {
 	const query = "SELECT id, name FROM products"
+
+	db.connectionMutex.Lock()
+	defer db.connectionMutex.Unlock()
 
 	rows, err := db.connection.QueryContext(ctx, query)
 	if err != nil {
@@ -79,6 +127,7 @@ func (db *Database) GetProducts(ctx context.Context) ([]Product, error) {
 	}()
 
 	var products []Product
+
 	for rows.Next() {
 		var p Product
 		if err := rows.Scan(
