@@ -122,12 +122,16 @@ docker logs hello-vault-go-app-1
 [GIN] 2021/12/09 - 19:57:22 | 200 |    2.559083ms |    192.168.96.1 | GET      "/products"
 ```
 
-## API
+## Stack Design
 
+### API
 | Endpoint             | Description                                                            |
 | -------------------- | ---------------------------------------------------------------------- |
 | **POST** `/payments` | A simple example of Vault static secrets workflow (see example above)  |
 | **GET** `/products`  | A simple example of Vault dynamic secrets workflow (see example above) |
+
+### Docker Compose Architecture
+![arch overview](images/arch-overview.svg)
 
 [vault]:           https://www.vaultproject.io/
 [docker]:          https://docs.docker.com/get-docker/
