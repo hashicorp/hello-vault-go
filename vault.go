@@ -78,7 +78,7 @@ func (v *Vault) login(ctx context.Context) (*vault.Secret, error) {
 		return nil, fmt.Errorf("unable to initialize approle authentication method: %w", err)
 	}
 
-	log.Printf("logging in to vault; RoleID: %s", v.parameters.approleRoleID)
+	log.Printf("logging in to vault with approle auth; role id: %s", v.parameters.approleRoleID)
 
 	authInfo, err := v.client.Auth().Login(ctx, appRoleAuth)
 	if err != nil {
@@ -88,7 +88,7 @@ func (v *Vault) login(ctx context.Context) (*vault.Secret, error) {
 		return nil, fmt.Errorf("no approle info was returned after login")
 	}
 
-	log.Println("logging in to vault: success!")
+	log.Println("logging in to vault with approle auth: success!")
 
 	return authInfo, nil
 }

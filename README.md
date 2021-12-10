@@ -39,7 +39,7 @@ This step may take a few minutes to download the necessary dependencies.
 
 ```
 
-_(Optional):_ verify that the services started successfully
+Verify that the services started successfully:
 
 ```bash
 docker ps --format "table {{.ID}}\t{{.Status}}\t{{.Names}}\t{{.Ports}}"
@@ -70,7 +70,7 @@ curl -s -X POST http://localhost:8080/payments | jq
 }
 ```
 
-_(Optional):_ examine the logs
+Check the logs:
 
 ```bash
 docker logs hello-vault-go-app-1
@@ -78,9 +78,9 @@ docker logs hello-vault-go-app-1
 
 ```log
 ...
-2021/12/09 19:56:36 getting secret api key from vault
-2021/12/09 19:56:36 getting secret api key from vault: success!
-[GIN] 2021/12/09 - 19:56:36 | 200 |    3.219167ms |    192.168.96.1 | POST     "/payments"
+2021/12/10 23:20:36 getting secret api key from vault
+2021/12/10 23:20:36 getting secret api key from vault: success!
+[GIN] 2021/12/10 - 23:20:36 | 200 |    3.219167ms |    192.168.96.1 | POST     "/payments"
 ```
 
 ### 3. Try out `GET /products` endpoint (dynamic secrets workflow)
@@ -107,19 +107,76 @@ curl -s -X GET http://localhost:8080/products | jq
 ]
 ```
 
-_(Optional):_ examine the logs
+Check the logs:
 
 ```bash
 docker logs hello-vault-go-app-1
 ```
 
 ```log
-2021/12/09 19:52:58 getting temporary database credentials from vault
-2021/12/09 19:52:58 getting temporary database credentials from vault: success!
-2021/12/09 19:52:58 connecting to "postgres" database @ db:5432
-2021/12/09 19:52:58 connecting to "postgres" database: success!
+2021/12/10 23:20:15 getting temporary database credentials from vault
+2021/12/10 23:20:15 getting temporary database credentials from vault: success!
+2021/12/10 23:20:15 connecting to "postgres" database @ db:5432
+2021/12/10 23:20:15 connecting to "postgres" database: success!
 ...
-[GIN] 2021/12/09 - 19:57:22 | 200 |    2.559083ms |    192.168.96.1 | GET      "/products"
+[GIN] 2021/12/10 - 23:25:22 | 200 |    2.559083ms |    192.168.96.1 | GET      "/products"
+```
+
+### 4. Examine the logs for renew logic
+
+One of the complexities of dealing with short-lived secrets is that they must
+be renewed periodically.
+
+Examine the logs for how the Vault auth token is periodically renewed:
+
+```bash
+docker logs hello-vault-go-app-1 2>&1 | grep auth
+```
+
+```log
+2021/12/10 23:20:15 logging in to vault with approle auth; role id: demo-web-app
+2021/12/10 23:20:15 logging in to vault with approle auth: success!
+2021/12/10 23:20:15 auth token renew / login loop: begin
+2021/12/10 23:20:15 auth token renew cycle: started
+2021/12/10 23:20:15 auth token: successfully renewed
+2021/12/10 23:20:58 auth token: successfully renewed
+2021/12/10 23:21:41 auth token: successfully renewed
+2021/12/10 23:22:23 auth token: successfully renewed
+2021/12/10 23:23:01 auth token: successfully renewed
+2021/12/10 23:23:01 auth token renew cycle: the secret can no longer be renewed
+2021/12/10 23:23:01 logging in to vault with approle auth; role id: demo-web-app
+2021/12/10 23:23:01 logging in to vault with approle auth: success!
+2021/12/10 23:23:01 auth token renew cycle: started
+2021/12/10 23:23:01 auth token: successfully renewed
+2021/12/10 23:23:44 auth token: successfully renewed
+```
+
+Examine the logs for database credentials renew / reconnect cycle:
+
+```bash
+docker logs hello-vault-go-app-1 2>&1 | grep database
+```
+
+```log
+2021/12/10 23:20:15 getting temporary database credentials from vault
+2021/12/10 23:20:15 getting temporary database credentials from vault: success!
+2021/12/10 23:20:15 connecting to "postgres" database @ db:5432
+2021/12/10 23:20:15 connecting to "postgres" database: success!
+2021/12/10 23:20:15 database credentials renew / reconnect loop: begin
+2021/12/10 23:20:15 database credentials renew cycle: started
+2021/12/10 23:20:15 database credentials: successfully renewed
+2021/12/10 23:20:43 database credentials: successfully renewed
+2021/12/10 23:21:12 database credentials: successfully renewed
+2021/12/10 23:21:41 database credentials: successfully renewed
+2021/12/10 23:22:05 database credentials: successfully renewed
+2021/12/10 23:22:05 database credentials renew cycle: the secret can no longer be renewed
+2021/12/10 23:22:05 getting temporary database credentials from vault
+2021/12/10 23:22:05 getting temporary database credentials from vault: success!
+2021/12/10 23:22:05 connecting to "postgres" database @ db:5432
+2021/12/10 23:22:05 connecting to "postgres" database: success!
+2021/12/10 23:22:05 database credentials renew cycle: started
+2021/12/10 23:22:05 database credentials: successfully renewed
+2021/12/10 23:22:35 database credentials: successfully renewed
 ```
 
 ## Stack Design
