@@ -76,7 +76,3 @@ vault write database/roles/dev-readonly \
         GRANT readonly TO \"{{name}}\";" \
     default_ttl="1h" \
     max_ttl="24h"
-
-
-# keep container alive
-while sleep 3600; do :; done
