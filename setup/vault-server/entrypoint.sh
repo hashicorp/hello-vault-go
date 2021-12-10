@@ -80,4 +80,4 @@ vault write database/roles/dev-readonly \
     max_ttl="24h"
 
 # keep container alive
-while sleep 3600; do :; done
+tail -f /dev/null & trap 'kill %1' SIGTERM ; wait
