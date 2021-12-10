@@ -31,11 +31,13 @@ vault policy write dev-policy /vault/config/dev-policy.hcl
 vault auth enable approle
 # configure a specific AppRole role with associated parameters
 # ref: https://www.vaultproject.io/api/auth/approle#parameters
+# NOTE: token_ttl & token_max_ttl are set to artificially low values to
+#       demonstrate the token renewal logic
 vault write auth/approle/role/dev-role \
     token_policies=dev-policy \
     secret_id_ttl=1h \
-    token_ttl=1h \
-    token_max_ttl=30h
+    token_ttl=1m \
+    token_max_ttl=3m
 # overwrite our RoleID with a known value to simplify our demo
 vault write auth/approle/role/dev-role/role-id role_id="${APPROLE_ROLE_ID}"
 
@@ -56,7 +58,7 @@ vault secrets enable -path=kv-v2 kv-v2
 # seed the kv-v2 store with an entry our web app will use
 vault kv put kv-v2/api-key apiKey=my-secret-key
 
-# Dynamic Secrets:
+# Dynamic Secrets
 # enable a database secrets engine
 # ref: https://www.vaultproject.io/docs/secrets/databases
 vault secrets enable database
@@ -71,13 +73,16 @@ vault write database/config/my-postgresql-database \
 
 # rotate the password for the Vault user, ensures user is only accessible by Vault itself
 vault write -force database/config/my-postgresql-database
-# allow Vault to create roles dynamically with the same privileges as the readonly role created in our db init scripts
+# allow Vault to create roles dynamically with the same privileges as the
+# readonly role created in our database init scripts
+# NOTE: default_ttl and max_ttl are set to artificially low values here to
+#       demonstrate the credential renewal logic
 vault write database/roles/dev-readonly \
     db_name=my-postgresql-database \
     creation_statements="CREATE ROLE \"{{name}}\" WITH LOGIN PASSWORD '{{password}}' VALID UNTIL '{{expiration}}'; \
         GRANT readonly TO \"{{name}}\";" \
-    default_ttl="1h" \
-    max_ttl="24h"
+    default_ttl="40s" \
+    max_ttl="2m"
 
 # keep container alive
 tail -f /dev/null & trap 'kill %1' SIGTERM ; wait

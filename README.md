@@ -39,7 +39,7 @@ This step may take a few minutes to download the necessary dependencies.
 
 ```
 
-_(Optional):_ verify that the services started successfully
+Verify that the services started successfully:
 
 ```bash
 docker ps --format "table {{.ID}}\t{{.Status}}\t{{.Names}}\t{{.Ports}}"
@@ -70,7 +70,7 @@ curl -s -X POST http://localhost:8080/payments | jq
 }
 ```
 
-_(Optional):_ examine the logs
+Check the logs:
 
 ```bash
 docker logs hello-vault-go-app-1
@@ -107,7 +107,7 @@ curl -s -X GET http://localhost:8080/products | jq
 ]
 ```
 
-_(Optional):_ examine the logs
+Check the logs:
 
 ```bash
 docker logs hello-vault-go-app-1
@@ -120,6 +120,62 @@ docker logs hello-vault-go-app-1
 2021/12/09 19:52:58 connecting to "postgres" database: success!
 ...
 [GIN] 2021/12/09 - 19:57:22 | 200 |    2.559083ms |    192.168.96.1 | GET      "/products"
+```
+
+### 4. Examine the logs for renew logic
+
+One of the complexities of dealing with short-lived secrets is that they must
+be renewed periodically. In this application, we:
+
+- renew the Vault auth token and re-login when the token reaches its
+  `token_max_ttl` lease expiration time
+- renew the database credentials and get new ones + reconnect when the
+  credentials' `max_ttl` is reached
+
+![renew-diagram](images/renew-diagram.svg)
+
+Examine the logs for the token auth renew cycle:
+
+```bash
+docker logs hello-vault-go-app-1 2>&1 | grep auth
+```
+
+```log
+2021/12/10 21:12:14 auth token renew / login loop: begin
+2021/12/10 21:12:14 auth token renew cycle: started
+2021/12/10 21:12:14 auth token: successfully renewed
+2021/12/10 21:12:57 auth token: successfully renewed
+2021/12/10 21:13:40 auth token: successfully renewed
+2021/12/10 21:14:22 auth token: successfully renewed
+2021/12/10 21:15:00 auth token: successfully renewed
+2021/12/10 21:15:00 auth token renew cycle: the secret can no longer be renewed
+```
+
+Examine the logs for the database credentials renew cycle:
+
+```bash
+docker logs hello-vault-go-app-1 2>&1 | grep database
+```
+
+```log
+2021/12/10 21:12:14 getting temporary database credentials from vault
+2021/12/10 21:12:14 getting temporary database credentials from vault: success!
+2021/12/10 21:12:14 connecting to "postgres" database @ db:5432
+2021/12/10 21:12:14 connecting to "postgres" database: success!
+2021/12/10 21:12:14 database credentials renew / reconnect loop: begin
+2021/12/10 21:12:14 database credentials renew cycle: started
+2021/12/10 21:12:14 database credentials: successfully renewed
+2021/12/10 21:12:42 database credentials: successfully renewed
+2021/12/10 21:13:11 database credentials: successfully renewed
+2021/12/10 21:13:39 database credentials: successfully renewed
+2021/12/10 21:14:04 database credentials: successfully renewed
+2021/12/10 21:14:04 database credentials renew cycle: the secret can no longer be renewed
+2021/12/10 21:14:04 getting temporary database credentials from vault
+2021/12/10 21:14:04 getting temporary database credentials from vault: success!
+2021/12/10 21:14:04 connecting to "postgres" database @ db:5432
+2021/12/10 21:14:04 connecting to "postgres" database: success!
+2021/12/10 21:14:04 database credentials renew cycle: started
+2021/12/10 21:14:04 database credentials: successfully renewed
 ```
 
 ## API
