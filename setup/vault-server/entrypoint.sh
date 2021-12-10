@@ -1,43 +1,67 @@
 #!/bin/sh
+###############################################################################################
+##               *** WARNING - INSECURE - DO NOT USE IN PRODUCTION ***                       ##
+## This script is to simulate operations a Vault Operator would perform and as such          ##
+## is not a representation of best practices in production environments.                    ##
+## https://learn.hashicorp.com/tutorials/vault/pattern-approle?in=vault/recommended-patterns ##
+###############################################################################################
+
 export VAULT_ADDR='http://127.0.0.1:8200'
-export VAULT_SKIP_VERIFY=true
 export VAULT_FORMAT='json'
 
-# start our dev server
+# spawn a new process for the development vault server
+# and wait for it to come online
+# ref: https://www.vaultproject.io/docs/concepts/dev-server
 vault server -dev -dev-listen-address="0.0.0.0:8200" &
 sleep 5s
 
 # authenticate containers local vault cli
+# ref: https://www.vaultproject.io/docs/commands/login
 vault login -no-print "${VAULT_DEV_ROOT_TOKEN_ID}"
 
-# set up vault access for a developer user
+# Access Policies
+# add policies for the various roles we'll be using
+# ref: https://www.vaultproject.io/docs/concepts/policies
+vault policy write trusted-orchestrator-policy /vault/config/trusted-orchestrator-policy.hcl
 vault policy write dev-policy /vault/config/dev-policy.hcl
 
-# enable approle
+# AppRole Auth Method
+# enable AppRole auth method utilized by our web application
+# ref: https://www.vaultproject.io/docs/auth/approle
 vault auth enable approle
-
-# create role with policies and ttls
-# - secret_id_ttl:   determines how long the unwrapped secret_id will be valid for
-# - token_ttl:       determines how long the login token is valid
-# - token_max_ttl:   determines how long the login token can be renewed
-# read more here about parameters here:
-# https://www.vaultproject.io/api/auth/approle#parameters
+# configure a specific AppRole role with associated parameters
+# ref: https://www.vaultproject.io/api/auth/approle#parameters
 vault write auth/approle/role/dev-role \
     token_policies=dev-policy \
     secret_id_ttl=1h \
     token_ttl=1h \
     token_max_ttl=30h
+# overwrite our RoleID with a known value to simplify our demo
+vault write auth/approle/role/dev-role/role-id role_id="${APPROLE_ROLE_ID}"
 
-# set up kv-v2
+# Token Auth Method
+# configure a token with permissions to act as an orchestrator
+# the orchestrator's token will expire after 2 hours
+# for brevity we have not introduced a method to renew this token
+# ref: https://www.vaultproject.io/docs/commands/token/create
+vault token create \
+    -id="${ORCHESTRATOR_TOKEN}" \
+    -policy=trusted-orchestrator-policy \
+    -ttl=2h
+
+# Static Secrets
+# enable a kv-v2 secrets engine passing in the path parameter
+# ref: https://www.vaultproject.io/docs/secrets/kv/kv-v2
 vault secrets enable -path=kv-v2 kv-v2
-
-# seed the kv-v2 store with an api key
+# seed the kv-v2 store with an entry our web app will use
 vault kv put kv-v2/api-key apiKey=my-secret-key
 
-# set up database secrets engine
+# Dynamic Secrets:
+# enable a database secrets engine
+# ref: https://www.vaultproject.io/docs/secrets/databases
 vault secrets enable database
-
-# configure Vault to be able to connect to DB
+# configure Vault's connection to our db, in this case PostgreSQL
+# ref: https://www.vaultproject.io/api/secret/databases/postgresql
 vault write database/config/my-postgresql-database \
     plugin_name=postgresql-database-plugin \
     allowed_roles="dev-readonly" \
@@ -45,9 +69,8 @@ vault write database/config/my-postgresql-database \
     username="vaultuser" \
     password="vaultpass"
 
-# rotates the password for the Vault user, ensures user is only accessible by Vault itself
+# rotate the password for the Vault user, ensures user is only accessible by Vault itself
 vault write -force database/config/my-postgresql-database
-
 # allow Vault to create roles dynamically with the same privileges as the readonly role created in our db init scripts
 vault write database/roles/dev-readonly \
     db_name=my-postgresql-database \
@@ -56,14 +79,5 @@ vault write database/roles/dev-readonly \
     default_ttl="1h" \
     max_ttl="24h"
 
-# Typically these steps (provisioning a role and wrapped secret as well as making it available to the container)
-# are handled by a trusted orchestrator. In this example we're using a docker shared volume as our trusted entity
-# read more about trusted orchestrators here:
-# https://learn.hashicorp.com/tutorials/vault/secure-introduction?in=vault/app-integration#trusted-orchestrator
-# write role id to shared location for the web app to consume
-vault read auth/approle/role/dev-role/role-id | jq -r .data.role_id > /tmp/role
-# generate a wrapped secret (one time use) that expires after 10 seconds for the web app to consume
-vault write -wrap-ttl=10s -f auth/approle/role/dev-role/secret-id | jq -r .wrap_info.token > /tmp/secret
-
-# keep vault container alive
-wait
+# keep container alive
+tail -f /dev/null & trap 'kill %1' SIGTERM ; wait

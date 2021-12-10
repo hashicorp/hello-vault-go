@@ -1,11 +1,9 @@
 #!/bin/sh
-echo "Waiting for vault to start so we can obtain a RoleID"
+echo "Waiting for orchestrator"
 
-while [ ! -f "${1}" ]; do sleep 3; done
+while [ ! -f /tmp/secret ]; do sleep 3; done
 
 sleep 2;
-echo "Starting ${2}"
+echo "Starting ${1}"
 
-export VAULT_APPROLE_ROLE_ID=$(cat /tmp/role)
-
-exec "${2}"
+exec "${1}"

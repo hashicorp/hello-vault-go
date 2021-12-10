@@ -5,9 +5,8 @@ services:
     environment:
       MY_ADDRESS:                   :8080
       VAULT_ADDRESS:                http://vault:8200
+      VAULT_APPROLE_ROLE_ID:        demo-web-app
       VAULT_APPROLE_SECRET_ID_FILE: /tmp/secret
-      # We inject the role id after our development vault server comes online
-      # VAULT_APPROLE_ROLE_ID:        ""
       VAULT_DATABASE_CREDS_PATH:    database/creds/dev-readonly
       VAULT_API_KEY_PATH:           kv-v2/data/api-key
       DATABASE_HOSTNAME:            db
@@ -19,13 +18,13 @@ services:
       - "8080:8080"
     volumes:
       - type: volume
-        source: trusted_orchestrator
+        source: trusted-orchestrator-volume
         target: /tmp
     # Wait for our vault setup script to drop off a role id before we start the web app
-    entrypoint: ./wait-for-vault.sh /tmp/role ./hello-vault
+    entrypoint: ./wait-for-vault.sh ./hello-vault
     depends_on:
       - db
-      - vault
+      - trusted-orchestrator
       - secure-service
 
   db:
@@ -41,10 +40,6 @@ services:
 
   vault:
     build: ./setup/vault-server/
-    volumes:
-      - type:   volume
-        source: trusted_orchestrator
-        target: /tmp
     ports:
       - "8200:8200"
     cap_add:
@@ -53,7 +48,20 @@ services:
       - db
     environment:
       VAULT_DEV_ROOT_TOKEN_ID: root
+      ORCHESTRATOR_TOKEN:      insecure_token
+      APPROLE_ROLE_ID:         demo-web-app
       DB_HOST: "db"
+
+  trusted-orchestrator:
+    build: ./setup/trusted-orchestrator
+    depends_on:
+      - vault
+    environment:
+      ORCHESTRATOR_TOKEN: insecure_token
+    volumes:
+      - type: volume
+        source: trusted-orchestrator-volume
+        target: /tmp
 
   # secure-service is a simulated 3rd party service that requires a specific header to get a 200 response
   secure-service:
@@ -70,4 +78,4 @@ services:
 
 volumes:
   dbdata:
-  trusted_orchestrator:
+  trusted-orchestrator-volume:
