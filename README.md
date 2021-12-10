@@ -46,11 +46,12 @@ docker ps --format "table {{.ID}}\t{{.Status}}\t{{.Names}}\t{{.Ports}}"
 ```
 
 ```
-CONTAINER ID   STATUS              NAMES                             PORTS
-03ce7c9b3db7   Up About a minute   hello-vault-go-app-1              0.0.0.0:8080->8080/tcp
-63efed0cde37   Up About a minute   hello-vault-go-vault-1            0.0.0.0:8200->8200/tcp, 8400/tcp
-6f8699672df5   Up About a minute   hello-vault-go-db-1               0.0.0.0:5432->5432/tcp
-da8167b36d31   Up About a minute   hello-vault-go-secure-service-1   0.0.0.0:1717->80/tcp
+CONTAINER ID   STATUS              NAMES                                   PORTS
+f1ef46f7efb8   Up About a minute   hello-vault-go-app-1                    0.0.0.0:8080->8080/tcp
+8c3e620f61ab   Up About a minute   hello-vault-go-trusted-orchestrator-1
+87d80043a323   Up About a minute   hello-vault-go-vault-1                  0.0.0.0:8200->8200/tcp
+db378af1e187   Up About a minute   hello-vault-go-secure-service-1         0.0.0.0:1717->80/tcp
+0751700de59e   Up About a minute   hello-vault-go-db-1                     0.0.0.0:5432->5432/tcp
 ```
 
 ### 2. Try out `POST /payments` endpoint (static secrets workflow)
