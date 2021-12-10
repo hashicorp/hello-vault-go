@@ -17,9 +17,11 @@ sleep 15
 # ref: https://www.vaultproject.io/docs/concepts/response-wrapping
 while true; do
   curl --silent \
-      --request POST \
-      --header "X-Vault-Token: ${ORCHESTRATOR_TOKEN}" \
-      --header "X-Vault-Wrap-TTL: 5m" \
-      http://vault:8200/v1/auth/approle/role/dev-role/secret-id | jq -r '.wrap_info.token' > /tmp/secret
-  sleep 285
+       --request POST \
+       --header "X-Vault-Token: ${ORCHESTRATOR_TOKEN}" \
+       --header "X-Vault-Wrap-TTL: 5m" \
+          http://vault:8200/v1/auth/approle/role/dev-role/secret-id | jq -r '.wrap_info.token' > /tmp/secret
+
+  # sleep for a very short time to demonstrate our token renewal logic
+  sleep 30
 done
