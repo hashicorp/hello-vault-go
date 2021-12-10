@@ -2,7 +2,10 @@
 ###############################################################################################
 ##               *** WARNING - INSECURE - DO NOT USE IN PRODUCTION ***                       ##
 ## This script is to simulate operations a trusted orchestrator would perform and as such    ##
-## is not a representation of best practices in production environments.                    ##
+## is not a representation of best practices in production environments.                     ##
+## Normally the trusted orchestrator is the mechanism that launches applications and injects ##
+## them with a Secret ID at runtime; they are not typically something like Terraform, Chef,  ##
+## or Kubernetes.                                                                            ##
 ## https://learn.hashicorp.com/tutorials/vault/pattern-approle?in=vault/recommended-patterns ##
 ###############################################################################################
 

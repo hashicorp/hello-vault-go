@@ -37,7 +37,10 @@ vault write auth/approle/role/dev-role \
     token_ttl=1h \
     token_max_ttl=30h
 
+# Token Auth Method
 # configure a token with permissions to act as an orchestrator
+# the orchestrator's token will expire after 2 hours
+# for brevity we have not introduced a method to renew this token
 # ref: https://www.vaultproject.io/docs/commands/token/create
 vault token create \
     -id="${ORCHESTRATOR_TOKEN}" \
