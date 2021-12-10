@@ -1,6 +1,6 @@
 FROM alpine:latest
 
-# We'll add some basic libraries to make scripting the calls a bit easier
+# add some basic libraries to make scripting the calls a bit easier
 # ref: https://stedolan.github.io/jq/
 RUN apk add --no-cache jq curl
 
