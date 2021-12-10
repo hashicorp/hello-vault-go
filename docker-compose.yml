@@ -5,6 +5,7 @@ services:
     environment:
       MY_ADDRESS:                   :8080
       VAULT_ADDRESS:                http://vault:8200
+      VAULT_APPROLE_ROLE_ID:        demo-web-app
       VAULT_APPROLE_SECRET_ID_FILE: /tmp/secret
       VAULT_DATABASE_CREDS_PATH:    database/creds/dev-readonly
       VAULT_API_KEY_PATH:           kv-v2/data/api-key
@@ -47,7 +48,8 @@ services:
       - db
     environment:
       VAULT_DEV_ROOT_TOKEN_ID: root
-      ORCHESTRATOR_TOKEN: insecure_token
+      ORCHESTRATOR_TOKEN:      insecure_token
+      APPROLE_ROLE_ID:         demo-web-app
       DB_HOST: "db"
 
   trusted-orchestrator:

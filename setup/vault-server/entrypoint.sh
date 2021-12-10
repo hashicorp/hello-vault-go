@@ -36,6 +36,8 @@ vault write auth/approle/role/dev-role \
     secret_id_ttl=1h \
     token_ttl=1h \
     token_max_ttl=30h
+# overwrite our RoleID with a known value to simplify our demo
+vault write auth/approle/role/dev-role/role-id role_id="${APPROLE_ROLE_ID}"
 
 # Token Auth Method
 # configure a token with permissions to act as an orchestrator
@@ -76,3 +78,6 @@ vault write database/roles/dev-readonly \
         GRANT readonly TO \"{{name}}\";" \
     default_ttl="1h" \
     max_ttl="24h"
+
+# keep container alive
+while sleep 3600; do :; done
