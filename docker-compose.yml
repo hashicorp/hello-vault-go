@@ -17,7 +17,7 @@ services:
       - "8080:8080"
     volumes:
       - type: volume
-        source: trusted_orchestrator
+        source: trusted-orchestrator-volume
         target: /tmp
     # Wait for our vault setup script to drop off a role id before we start the web app
     entrypoint: ./wait-for-vault.sh ./hello-vault
@@ -58,7 +58,7 @@ services:
       ORCHESTRATOR_TOKEN: insecure_token
     volumes:
       - type: volume
-        source: trusted_orchestrator
+        source: trusted-orchestrator-volume
         target: /tmp
 
   # secure-service is a simulated 3rd party service that requires a specific header to get a 200 response
@@ -76,4 +76,4 @@ services:
 
 volumes:
   dbdata:
-  trusted_orchestrator:
+  trusted-orchestrator-volume:
