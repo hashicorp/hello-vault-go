@@ -1,10 +1,11 @@
 version: "3.9"
 services:
+
   app:
     build: .
     environment:
       MY_ADDRESS:                   :8080
-      VAULT_ADDRESS:                http://vault:8200
+      VAULT_ADDRESS:                http://vault-server:8200
       VAULT_APPROLE_ROLE_ID:        demo-web-app
       VAULT_APPROLE_SECRET_ID_FILE: /tmp/secret
       VAULT_DATABASE_CREDS_PATH:    database/creds/dev-readonly
@@ -17,15 +18,18 @@ services:
     ports:
       - "8080:8080"
     volumes:
-      - type: volume
+      - type:   volume
         source: trusted-orchestrator-volume
         target: /tmp
-    # Wait for our vault setup script to drop off a role id before we start the web app
+    # wait for our vault setup script to drop off a role id before we start the web app
     entrypoint: ./wait-for-vault.sh ./hello-vault
     depends_on:
-      - db
-      - trusted-orchestrator
-      - secure-service
+      db:
+        condition: service_started
+      trusted-orchestrator:
+        condition: service_started
+      secure-service:
+        condition: service_started
 
   db:
     image: postgres:14.0
@@ -33,49 +37,55 @@ services:
     environment:
       POSTGRES_PASSWORD: rootpassword
     volumes:
-      - "dbdata:/var/lib/postgresql/data"
-      - "./setup/db-scripts:/docker-entrypoint-initdb.d/"
+      - type:   volume
+        source: db-data
+        target: /var/lib/postgresql/data
+      - type:   bind
+        source: ./setup/db
+        target: /docker-entrypoint-initdb.d/"
     ports:
       - "5432:5432"
 
-  vault:
+  vault-server:
     build: ./setup/vault-server/
-    ports:
-      - "8200:8200"
     cap_add:
       - IPC_LOCK
-    depends_on:
-      - db
     environment:
       VAULT_DEV_ROOT_TOKEN_ID: root
       ORCHESTRATOR_TOKEN:      insecure_token
       APPROLE_ROLE_ID:         demo-web-app
-      DB_HOST: "db"
+      DB_HOST:                 db
+    ports:
+      - "8200:8200"
+    depends_on:
+      db:
+        condition: service_started
 
   trusted-orchestrator:
     build: ./setup/trusted-orchestrator
-    depends_on:
-      - vault
     environment:
+      VAULT_ADDRESS:      http://vault-server:8200
       ORCHESTRATOR_TOKEN: insecure_token
     volumes:
       - type: volume
         source: trusted-orchestrator-volume
         target: /tmp
+    depends_on:
+      vault-server:
+        condition: service_started
 
   # secure-service is a simulated 3rd party service that requires a specific header to get a 200 response
   secure-service:
     image: nginx:latest
     volumes:
       - type:   bind
-        source: ./setup/nginx/default.conf.template
+        source: ./setup/secure-service/default.conf.template
         target: /etc/nginx/templates/default.conf.template
     ports:
       - "1717:80"
     environment:
-      # EXPECTED_API_KEY sets the expected value for incoming requests' header X-API-KEY
-      EXPECTED_API_KEY: my-secret-key
+      EXPECTED_API_KEY: my-secret-key # sets the expected value for incoming requests' header X-API-KEY
 
 volumes:
-  dbdata:
+  db-data:
   trusted-orchestrator-volume:

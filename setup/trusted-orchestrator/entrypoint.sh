@@ -11,16 +11,22 @@
 # give vault time to come online
 sleep 15
 
-# using the orchestrator token generate a new wrapped SecretID on a regular
-# cadence (slightly less than our wrap TTL)
+trap 'kill %1' SIGTERM
+
+# using the orchestrator token, generate a new wrapped SecretID on a regular
+# cadence (less than the token_ttl_max of the auth token)
 # ref: https://www.vaultproject.io/api-docs/auth/approle#generate-new-secret-id
 # ref: https://www.vaultproject.io/docs/concepts/response-wrapping
 while true; do
+  echo $(date) "requesting new secret id "
+
   curl --silent \
        --request POST \
        --header "X-Vault-Token: ${ORCHESTRATOR_TOKEN}" \
        --header "X-Vault-Wrap-TTL: 5m" \
-          http://vault:8200/v1/auth/approle/role/dev-role/secret-id | jq -r '.wrap_info.token' > /tmp/secret
+          ${VAULT_ADDRESS}/v1/auth/approle/role/dev-role/secret-id | jq -r '.wrap_info.token' > /tmp/secret
+
+  echo $(date) "wrote wrapped secret id to /tmp/secret"
 
   # sleep for a very short time to demonstrate our token renewal logic
   sleep 30

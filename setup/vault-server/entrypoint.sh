@@ -68,8 +68,8 @@ vault write database/config/my-postgresql-database \
     plugin_name=postgresql-database-plugin \
     allowed_roles="dev-readonly" \
     connection_url="postgresql://{{username}}:{{password}}@${DB_HOST:="db"}:5432/postgres?sslmode=disable" \
-    username="vaultuser" \
-    password="vaultpass"
+    username="vaultdbuser" \
+    password="vaultdbpassword"
 
 # rotate the password for the Vault user, ensures user is only accessible by Vault itself
 vault write -force database/config/my-postgresql-database
