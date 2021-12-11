@@ -15,12 +15,12 @@ services:
       DATABASE_NAME:                postgres
       DATABASE_TIMEOUT:             10s
       SECURE_SERVICE_ADDRESS:       http://secure-service/api
-    ports:
-      - "8080:8080"
     volumes:
       - type:   volume
         source: trusted-orchestrator-volume
         target: /tmp
+    ports:
+      - "8080:8080"
     # wait for our vault setup script to drop off a role id before we start the web app
     entrypoint: ./wait-for-vault.sh ./hello-vault
     depends_on:
@@ -77,14 +77,14 @@ services:
   # secure-service is a simulated 3rd party service that requires a specific header to get a 200 response
   secure-service:
     image: nginx:latest
+    environment:
+      EXPECTED_API_KEY: my-secret-key # sets the expected value for incoming requests' header X-API-KEY
     volumes:
       - type:   bind
         source: ./setup/secure-service/default.conf.template
         target: /etc/nginx/templates/default.conf.template
     ports:
       - "1717:80"
-    environment:
-      EXPECTED_API_KEY: my-secret-key # sets the expected value for incoming requests' header X-API-KEY
 
 volumes:
   db-data:
