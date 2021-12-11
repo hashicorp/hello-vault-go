@@ -1,0 +1,4 @@
+CREATE ROLE vault-db-user LOGIN SUPERUSER PASSWORD 'vault-db-pass';
+
+CREATE ROLE readonly NOINHERIT;
+GRANT SELECT ON ALL TABLES IN SCHEMA public TO "readonly";
