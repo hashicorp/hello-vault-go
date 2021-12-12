@@ -123,8 +123,8 @@ docker logs hello-vault-go-app-1
 
 ### 4. Examine the logs for renew logic
 
-One of the complexities of dealing with short-lived secrets is that they must
-be renewed periodically.
+One of the complexities of dealing with short-lived secrets is that they must be
+renewed periodically.
 
 Examine the logs for how the Vault auth token is periodically renewed:
 
@@ -181,12 +181,14 @@ docker logs hello-vault-go-app-1 2>&1 | grep database
 ## Stack Design
 
 ### API
+
 | Endpoint             | Description                                                            |
 | -------------------- | ---------------------------------------------------------------------- |
 | **POST** `/payments` | A simple example of Vault static secrets workflow (see example above)  |
 | **GET** `/products`  | A simple example of Vault dynamic secrets workflow (see example above) |
 
 ### Docker Compose Architecture
+
 ![arch overview](images/arch-overview.svg)
 
 [vault]:           https://www.vaultproject.io/
