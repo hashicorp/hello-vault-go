@@ -1,4 +1,5 @@
 #!/bin/sh
+
 ###############################################################################################
 ##               *** WARNING - INSECURE - DO NOT USE IN PRODUCTION ***                       ##
 ## This script is to simulate operations a trusted orchestrator would perform and as such    ##
@@ -8,17 +9,18 @@
 ## https://learn.hashicorp.com/tutorials/vault/secure-introduction#trusted-orchestrator      ##
 ###############################################################################################
 
-# give vault time to come online
-sleep 15
+finish() {
+  echo "$(date +"%T"): exiting"
+  exit
+}
 
-trap 'kill %1' SIGTERM
+trap finish SIGINT SIGTERM
 
-# using the orchestrator token, generate a new wrapped SecretID on a regular
-# cadence (less than the token_ttl_max of the auth token)
+# Using the orchestrator token, generate a new wrapped SecretID on a regular cadence
 # ref: https://www.vaultproject.io/api-docs/auth/approle#generate-new-secret-id
 # ref: https://www.vaultproject.io/docs/concepts/response-wrapping
 while true; do
-  echo $(date) "requesting new secret id "
+  echo "$(date +"%T"): requesting new secret id"
 
   curl --silent \
        --request POST \
@@ -26,8 +28,10 @@ while true; do
        --header "X-Vault-Wrap-TTL: 5m" \
           ${VAULT_ADDRESS}/v1/auth/approle/role/dev-role/secret-id | jq -r '.wrap_info.token' > /tmp/secret
 
-  echo $(date) "wrote wrapped secret id to /tmp/secret"
+  echo "$(date +"%T"): $?"
+  echo "$(date +"%T"): wrote wrapped secret id to /tmp/secret"
 
-  # sleep for a very short time to demonstrate our token renewal logic
-  sleep 30
+  # Sleep for a very short time (shorter than the token_max_ttl) to test our renew logic
+  sleep 30 &
+  wait
 done

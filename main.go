@@ -109,6 +109,11 @@ func run(ctx context.Context, env Environment) error {
 
 	r := gin.Default()
 
+	// healthcheck
+	r.GET("/healthcheck", func(c *gin.Context) {
+		c.String(200, "OK")
+	})
+
 	// demonstrates fetching a static secret from vault and using it to talk to another service
 	r.POST("/payments", h.CreatePayment)
 

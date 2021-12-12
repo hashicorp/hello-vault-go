@@ -1,7 +1,11 @@
 server {
     listen       80;
-    server_name  localhost secureAPI;
+    server_name  localhost secure-service;
     default_type application/json;
+
+    location /healthcheck {
+        return 200 "{\"message\":\"ok\"}";
+    }
 
     location /api {
         if ($http_x_api_key != "${EXPECTED_API_KEY}") {
