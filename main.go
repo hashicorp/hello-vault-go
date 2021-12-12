@@ -107,7 +107,10 @@ func run(ctx context.Context, env Environment) error {
 		secureServiceAddress: env.SecureServiceAddress,
 	}
 
-	r := gin.Default()
+	r := gin.New()
+	r.Use(
+		gin.LoggerWithWriter(gin.DefaultWriter, "/healthcheck"), // don't log healthcheck requests
+	)
 
 	// healthcheck
 	r.GET("/healthcheck", func(c *gin.Context) {

@@ -11,13 +11,12 @@ set -e
 export VAULT_ADDR='http://127.0.0.1:8200'
 export VAULT_FORMAT='json'
 
-# Spawn a new process for the development vault server
-# and wait for it to come online
+# spawn a new process for the development vault server and wait for it to come online
 # ref: https://www.vaultproject.io/docs/concepts/dev-server
 vault server -dev -dev-listen-address="0.0.0.0:8200" &
 sleep 5s
 
-# Authenticate container's local vault cli
+# authenticate container's local vault cli
 # ref: https://www.vaultproject.io/docs/commands/login
 vault login -no-print "${VAULT_DEV_ROOT_TOKEN_ID}"
 
@@ -25,7 +24,7 @@ vault login -no-print "${VAULT_DEV_ROOT_TOKEN_ID}"
 ########## ACCESS POLICIES ##########
 #####################################
 
-# Add policies for the various roles we'll be using.
+# add policies for the various roles we'll be using.
 # ref: https://www.vaultproject.io/docs/concepts/policies
 vault policy write trusted-orchestrator-policy /vault/config/trusted-orchestrator-policy.hcl
 vault policy write dev-policy /vault/config/dev-policy.hcl
@@ -34,11 +33,11 @@ vault policy write dev-policy /vault/config/dev-policy.hcl
 ######## APPROLE AUTH METHDO ########
 #####################################
 
-# Enable AppRole auth method utilized by our web application.
+# enable AppRole auth method utilized by our web application.
 # ref: https://www.vaultproject.io/docs/auth/approle
 vault auth enable approle
 
-# Configure a specific AppRole role with associated parameters.
+# configure a specific AppRole role with associated parameters.
 # ref: https://www.vaultproject.io/api/auth/approle#parameters
 vault write auth/approle/role/dev-role \
     token_policies=dev-policy \
@@ -46,16 +45,14 @@ vault write auth/approle/role/dev-role \
     token_ttl=1m \
     token_max_ttl=3m  # artificially low ttl to demonstrate token renewal
 
-# Overwrite our RoleID with a known value to simplify our demo
+# overwrite our RoleID with a known value to simplify our demo
 vault write auth/approle/role/dev-role/role-id role_id="${APPROLE_ROLE_ID}"
 
 #####################################
 ######### TOKEN AUTH METHOD #########
 #####################################
 
-# Configure a token with permissions to act as a trusted orchestrator.
-# The orchestrator's token will expire after 2 hours; for brevity, we have not
-# introduced a method to renew this token
+# configure a token with permissions to act as a trusted orchestrator
 # ref: https://www.vaultproject.io/docs/commands/token/create
 vault token create \
     -id="${ORCHESTRATOR_TOKEN}" \
@@ -66,22 +63,22 @@ vault token create \
 ########## STATIC SECRETS ###########
 #####################################
 
-# Enable a kv-v2 secrets engine, passing in the path parameter.
+# enable a kv-v2 secrets engine, passing in the path parameter.
 # ref: https://www.vaultproject.io/docs/secrets/kv/kv-v2
 vault secrets enable -path=kv-v2 kv-v2
 
-# Seed the kv-v2 store with an entry our web app will use.
+# seed the kv-v2 store with an entry our web app will use.
 vault kv put kv-v2/api-key apiKey=my-secret-key
 
 #####################################
 ########## DYNAMIC SECRETS ##########
 #####################################
 
-# Enable a database secrets engine
+# enable a database secrets engine
 # ref: https://www.vaultproject.io/docs/secrets/databases
 vault secrets enable database
 
-# Configure Vault's connection to our db, in this case PostgreSQL.
+# configure Vault's connection to our db, in this case PostgreSQL
 # ref: https://www.vaultproject.io/api/secret/databases/postgresql
 vault write database/config/my-postgresql-database \
     plugin_name=postgresql-database-plugin \
@@ -90,19 +87,18 @@ vault write database/config/my-postgresql-database \
     username="vault_db_user" \
     password="vault_db_password"
 
-# Rotate the password for vault_db_user, ensures the user is only accessible by Vault itself.
+# rotate the password for 'vault_db_user', ensures the user is only accessible by Vault itself
 vault write -force database/config/my-postgresql-database
 
-# Allow Vault to create roles dynamically with the same privileges as the
-# readonly role created in our database init scripts
+# allow Vault to create roles dynamically with the same privileges as the 'readonly' role created in our database's init scripts
 vault write database/roles/dev-readonly \
     db_name=my-postgresql-database \
     creation_statements="CREATE ROLE \"{{name}}\" WITH LOGIN PASSWORD '{{password}}' VALID UNTIL '{{expiration}}'; GRANT readonly TO \"{{name}}\";" \
     default_ttl="40s"
     max_ttl="2m"  # artificialy low to demonstrate credential renewal logic
 
-# This container is now healthy
+# this container is now healthy
 touch /tmp/healthy
 
-# Keep container alive
+# keep container alive
 tail -f /dev/null & trap 'kill %1' SIGTERM ; wait

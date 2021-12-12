@@ -16,7 +16,7 @@ finish() {
 
 trap finish SIGINT SIGTERM
 
-# Using the orchestrator token, generate a new wrapped SecretID on a regular cadence
+# using the orchestrator token, generate a new wrapped SecretID on a regular cadence
 # ref: https://www.vaultproject.io/api-docs/auth/approle#generate-new-secret-id
 # ref: https://www.vaultproject.io/docs/concepts/response-wrapping
 while true; do
@@ -31,7 +31,7 @@ while true; do
   echo "$(date +"%T"): $?"
   echo "$(date +"%T"): wrote wrapped secret id to /tmp/secret"
 
-  # Sleep for a very short time (shorter than the token_max_ttl) to test our renew logic
+  # sleep for a very short time (shorter than the token_max_ttl) to test our renew logic
   sleep 30 &
   wait
 done

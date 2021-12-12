@@ -27,15 +27,14 @@ This step may take a few minutes to download the necessary dependencies.
 ```
 
 ```
-[+] Running 8/8
- ⠿ Network hello-vault-go_default                          Created        0.1s
- ⠿ Volume "hello-vault-go_trusted-orchestrator-volume"     Created        0.0s
- ⠿ Volume "hello-vault-go_dbdata"                          Created        0.0s
- ⠿ Container hello-vault-go-db-1                           Started        0.9s
- ⠿ Container hello-vault-go-secure-service-1               Started        0.9s
- ⠿ Container hello-vault-go-vault-1                        Started        1.7s
- ⠿ Container hello-vault-go-trusted-orchestrator-1         Started        2.4s
- ⠿ Container hello-vault-go-app-1                          Started        3.1s
+[+] Running 7/7
+ ⠿ Network hello-vault-go_default                       Created        0.0s
+ ⠿ Volume "hello-vault-go_trusted-orchestrator-volume"  Created        0.0s
+ ⠿ Container hello-vault-go-secure-service-1            Started        0.6s
+ ⠿ Container hello-vault-go-database-1                  Started        0.6s
+ ⠿ Container hello-vault-go-vault-server-1              Started        1.3s
+ ⠿ Container hello-vault-go-trusted-orchestrator-1      Started        8.6s
+ ⠿ Container hello-vault-go-app-1                       Started       10.3s
 
 ```
 
@@ -46,12 +45,12 @@ docker ps --format "table {{.ID}}\t{{.Status}}\t{{.Names}}\t{{.Ports}}"
 ```
 
 ```
-CONTAINER ID   STATUS              NAMES                                   PORTS
-f1ef46f7efb8   Up About a minute   hello-vault-go-app-1                    0.0.0.0:8080->8080/tcp
-8c3e620f61ab   Up About a minute   hello-vault-go-trusted-orchestrator-1
-87d80043a323   Up About a minute   hello-vault-go-vault-1                  0.0.0.0:8200->8200/tcp
-db378af1e187   Up About a minute   hello-vault-go-secure-service-1         0.0.0.0:1717->80/tcp
-0751700de59e   Up About a minute   hello-vault-go-db-1                     0.0.0.0:5432->5432/tcp
+CONTAINER ID   STATUS                        NAMES                                   PORTS
+54748b9a0376   Up About a minute (healthy)   hello-vault-go-app-1                    0.0.0.0:8080->8080/tcp
+0f3e51ca864d   Up About a minute (healthy)   hello-vault-go-trusted-orchestrator-1
+9ab168883c44   Up About a minute (healthy)   hello-vault-go-vault-server-1           0.0.0.0:8200->8200/tcp
+673f2e812f21   Up About a minute (healthy)   hello-vault-go-secure-service-1         0.0.0.0:1717->80/tcp
+ad1a89455294   Up About a minute (healthy)   hello-vault-go-database-1               0.0.0.0:5432->5432/tcp
 ```
 
 ### 2. Try out `POST /payments` endpoint (static secrets workflow)
