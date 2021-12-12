@@ -101,8 +101,8 @@ vault write database/roles/dev-readonly \
     default_ttl="40s"
     max_ttl="2m"  # artificialy low to demonstrate credential renewal logic
 
-# this container is now healthy
+# This container is now healthy
 touch /tmp/healthy
 
-# keep container alive
+# Keep container alive
 tail -f /dev/null & trap 'kill %1' SIGTERM ; wait

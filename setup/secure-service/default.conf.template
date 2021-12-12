@@ -17,5 +17,4 @@ server {
     location / {
         return 404 "{\"error\":\"resource not found\"}";
     }
-
 }

@@ -14,5 +14,5 @@ HEALTHCHECK \
     --start-period=1s \
     --interval=1s \
     --timeout=1s \
-    --retries=20 \
+    --retries=30 \
         CMD curl --fail -s http://localhost:8080/healthcheck || exit 1
