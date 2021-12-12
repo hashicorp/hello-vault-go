@@ -25,7 +25,7 @@ vault login -no-print "${VAULT_DEV_ROOT_TOKEN_ID}"
 ########## ACCESS POLICIES ##########
 #####################################
 
-# add policies for the various roles we'll be using.
+# add policies for the various roles we'll be using
 # ref: https://www.vaultproject.io/docs/concepts/policies
 vault policy write trusted-orchestrator-policy /vault/config/trusted-orchestrator-policy.hcl
 vault policy write dev-policy /vault/config/dev-policy.hcl
@@ -34,7 +34,7 @@ vault policy write dev-policy /vault/config/dev-policy.hcl
 ######## APPROLE AUTH METHDO ########
 #####################################
 
-# enable AppRole auth method utilized by our web application.
+# enable AppRole auth method utilized by our web application
 # ref: https://www.vaultproject.io/docs/auth/approle
 vault auth enable approle
 
@@ -68,7 +68,7 @@ vault token create \
 # ref: https://www.vaultproject.io/docs/secrets/kv/kv-v2
 vault secrets enable -path=kv-v2 kv-v2
 
-# seed the kv-v2 store with an entry our web app will use.
+# seed the kv-v2 store with an entry our web app will use
 vault kv put kv-v2/api-key apiKey=my-secret-key
 
 #####################################
