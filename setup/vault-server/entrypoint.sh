@@ -1,4 +1,5 @@
 #!/bin/sh
+
 ###############################################################################################
 ##               *** WARNING - INSECURE - DO NOT USE IN PRODUCTION ***                       ##
 ## This script is to simulate operations a Vault operator would perform and, as such,        ##
@@ -37,7 +38,7 @@ vault policy write dev-policy /vault/config/dev-policy.hcl
 # ref: https://www.vaultproject.io/docs/auth/approle
 vault auth enable approle
 
-# configure a specific AppRole role with associated parameters.
+# configure a specific AppRole role with associated parameters
 # ref: https://www.vaultproject.io/api/auth/approle#parameters
 vault write auth/approle/role/dev-role \
     token_policies=dev-policy \
@@ -63,7 +64,7 @@ vault token create \
 ########## STATIC SECRETS ###########
 #####################################
 
-# enable a kv-v2 secrets engine, passing in the path parameter.
+# enable a kv-v2 secrets engine, passing in the path parameter
 # ref: https://www.vaultproject.io/docs/secrets/kv/kv-v2
 vault secrets enable -path=kv-v2 kv-v2
 
