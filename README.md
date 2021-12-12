@@ -41,16 +41,16 @@ This step may take a few minutes to download the necessary dependencies.
 Verify that the services started successfully:
 
 ```bash
-docker ps --format "table {{.ID}}\t{{.Status}}\t{{.Names}}\t{{.Ports}}"
+docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
 ```
 
 ```
-CONTAINER ID   STATUS                        NAMES                                   PORTS
-54748b9a0376   Up About a minute (healthy)   hello-vault-go-app-1                    0.0.0.0:8080->8080/tcp
-0f3e51ca864d   Up About a minute (healthy)   hello-vault-go-trusted-orchestrator-1
-9ab168883c44   Up About a minute (healthy)   hello-vault-go-vault-server-1           0.0.0.0:8200->8200/tcp
-673f2e812f21   Up About a minute (healthy)   hello-vault-go-secure-service-1         0.0.0.0:1717->80/tcp
-ad1a89455294   Up About a minute (healthy)   hello-vault-go-database-1               0.0.0.0:5432->5432/tcp
+NAMES                                   STATUS                        PORTS
+hello-vault-go-app-1                    Up About a minute (healthy)   0.0.0.0:8080->8080/tcp
+hello-vault-go-trusted-orchestrator-1   Up About a minute (healthy)
+hello-vault-go-vault-server-1           Up About a minute (healthy)   0.0.0.0:8200->8200/tcp
+hello-vault-go-secure-service-1         Up About a minute (healthy)   0.0.0.0:1717->80/tcp
+hello-vault-go-database-1               Up About a minute (healthy)   0.0.0.0:5432->5432/tcp
 ```
 
 ### 2. Try out `POST /payments` endpoint (static secrets workflow)
