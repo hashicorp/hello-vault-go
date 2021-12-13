@@ -1,4 +1,4 @@
-FROM vault:latest
+FROM vault:1.9.1
 
 # Add jq to make scripting the calls a bit easier
 # ref: https://stedolan.github.io/jq/
