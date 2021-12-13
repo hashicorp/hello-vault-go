@@ -124,7 +124,8 @@ docker logs hello-vault-go-app-1
 ### 4. Examine the logs for renew logic
 
 One of the complexities of dealing with short-lived secrets is that they must be
-renewed periodically.
+renewed periodically. This includes authentication tokens and database
+credentials.
 
 Examine the logs for how the Vault auth token is periodically renewed:
 
