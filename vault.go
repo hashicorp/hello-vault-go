@@ -65,6 +65,8 @@ func NewVaultAppRoleClient(ctx context.Context, parameters VaultParameters) (*Va
 // ref: https://learn.hashicorp.com/tutorials/vault/secure-introduction?in=vault/app-integration#trusted-orchestrator
 // ref: https://learn.hashicorp.com/tutorials/vault/approle-best-practices?in=vault/auth-methods#secretid-delivery-best-practices
 func (v *Vault) login(ctx context.Context) (*vault.Secret, error) {
+	log.Printf("logging in to vault with approle auth; role id: %s", v.parameters.approleRoleID)
+
 	approleSecretID := &approle.SecretID{
 		FromFile: v.parameters.approleSecretIDFile,
 	}
@@ -77,8 +79,6 @@ func (v *Vault) login(ctx context.Context) (*vault.Secret, error) {
 	if err != nil {
 		return nil, fmt.Errorf("unable to initialize approle authentication method: %w", err)
 	}
-
-	log.Printf("logging in to vault with approle auth; role id: %s", v.parameters.approleRoleID)
 
 	authInfo, err := v.client.Auth().Login(ctx, appRoleAuth)
 	if err != nil {
