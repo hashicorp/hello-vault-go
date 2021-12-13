@@ -15,8 +15,8 @@ type Handlers struct {
 }
 
 // (POST /payments) : demonstrates fetching a static secret from Vault and using it to talk to another service
-func (h *Handlers) CreatePayment(c *gin.Context) {
-	// retrieve secret from Vault passing in the active context and path to secret
+func (h *Handlers) Payments(c *gin.Context) {
+	// retrieve the secret from Vault
 	secret, err := h.vault.GetSecretAPIKey(c.Request.Context())
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
@@ -59,7 +59,7 @@ func (h *Handlers) CreatePayment(c *gin.Context) {
 }
 
 // (GET /products) : demonstrates database authentication with dynamic secrets
-func (h *Handlers) GetProducts(c *gin.Context) {
+func (h *Handlers) Products(c *gin.Context) {
 	products, err := h.database.GetProducts(c.Request.Context())
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
