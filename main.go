@@ -118,10 +118,10 @@ func run(ctx context.Context, env Environment) error {
 	})
 
 	// demonstrates fetching a static secret from vault and using it to talk to another service
-	r.POST("/payments", h.Payments)
+	r.POST("/payments", h.CreatePayment)
 
 	// demonstrates database authentication with dynamic secrets
-	r.GET("/products", h.Products)
+	r.GET("/products", h.GetProducts)
 
 	r.Run(env.MyAddress)
 

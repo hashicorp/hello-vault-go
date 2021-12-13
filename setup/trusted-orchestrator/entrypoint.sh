@@ -32,6 +32,6 @@ while true; do
   echo "$(date +"%T"): wrote wrapped secret id to /tmp/secret"
 
   # sleep for a very short time (shorter than the token_max_ttl) to test our renew logic
-  sleep 30 &
+  sleep 60 &
   wait
 done

@@ -42,9 +42,9 @@ vault auth enable approle
 # ref: https://www.vaultproject.io/api/auth/approle#parameters
 vault write auth/approle/role/dev-role \
     token_policies=dev-policy \
-    secret_id_ttl=1h \
-    token_ttl=1m \
-    token_max_ttl=3m  # artificially low ttl to demonstrate token renewal
+    secret_id_ttl="2m" \
+    token_ttl="2m" \
+    token_max_ttl="6m"  # artificially low ttl to demonstrate token renewal
 
 # overwrite our RoleID with a known value to simplify our demo
 vault write auth/approle/role/dev-role/role-id role_id="${APPROLE_ROLE_ID}"
@@ -95,8 +95,8 @@ vault write -force database/config/my-postgresql-database
 vault write database/roles/dev-readonly \
     db_name=my-postgresql-database \
     creation_statements="CREATE ROLE \"{{name}}\" WITH LOGIN PASSWORD '{{password}}' VALID UNTIL '{{expiration}}'; GRANT readonly TO \"{{name}}\";" \
-    default_ttl="40s"
-    max_ttl="2m"  # artificialy low to demonstrate credential renewal logic
+    default_ttl="100s"
+    max_ttl="5m"  # artificialy low to demonstrate credential renewal logic
 
 # this container is now healthy
 touch /tmp/healthy
