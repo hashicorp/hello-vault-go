@@ -33,6 +33,8 @@ services:
 
   vault-server:
     build: ./setup/vault-server/
+    cap_add:
+      - IPC_LOCK
     environment:
       VAULT_DEV_ROOT_TOKEN_ID: root
       APPROLE_ROLE_ID:         demo-web-app
