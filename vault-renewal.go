@@ -78,6 +78,7 @@ func (v *Vault) RenewDatabaseCredentialsPeriodically(
 				log.Fatalf("database credentials error: %v", err) // simplified error handling
 			}
 
+			// establish a new database connection using the new credentials
 			reconnect(ctx, credentials)
 
 			currentDatabaseSecret = secret
@@ -90,7 +91,7 @@ func (v *Vault) RenewDatabaseCredentialsPeriodically(
 // 'token_ttl' lease expiration time until it reaches its 'token_max_ttl' lease
 // expiration time.
 func (v *Vault) renewUntilMaxTTL(ctx context.Context, secret *vault.Secret, label string) error {
-	/* */ log.Printf("%s renew cycle: started", label)
+	/* */ log.Printf("%s renew cycle: started; lease duration: %ds", label, secret.LeaseDuration)
 	defer log.Printf("%s renew cycle: the secret can no longer be renewed", label)
 
 	watcher, err := v.client.NewLifetimeWatcher(&vault.LifetimeWatcherInput{
@@ -122,8 +123,8 @@ func (v *Vault) renewUntilMaxTTL(ctx context.Context, secret *vault.Secret, labe
 
 		// RenewCh is a channel that receives a message when a successful
 		// renewal takes place and includes metadata about the renewal.
-		case <-watcher.RenewCh():
-			log.Printf("%s: successfully renewed", label)
+		case info := <-watcher.RenewCh():
+			log.Printf("%s: successfully renewed; remaining lease duration: %ds", label, info.Secret.LeaseDuration)
 		}
 	}
 }
