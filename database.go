@@ -60,10 +60,11 @@ func (db *Database) Reconnect(ctx context.Context, credentials DatabaseCredentia
 	defer cancelContextFunc()
 
 	log.Printf(
-		"connecting to %q database @ %s:%s",
+		"connecting to %q database @ %s:%s with username %q",
 		db.parameters.name,
 		db.parameters.hostname,
 		db.parameters.port,
+		credentials.Username,
 	)
 
 	connectionString := fmt.Sprintf(
