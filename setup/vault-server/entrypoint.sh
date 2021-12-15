@@ -99,7 +99,7 @@ vault write -force database/config/my-postgresql-database
 vault write database/roles/dev-readonly \
     db_name=my-postgresql-database \
     creation_statements="CREATE ROLE \"{{name}}\" WITH LOGIN PASSWORD '{{password}}' VALID UNTIL '{{expiration}}'; GRANT readonly TO \"{{name}}\";" \
-    default_ttl="40s" \
+    default_ttl="40s"
     max_ttl="2m"  # artificially low to demonstrate credential renewal logic
 
 # this container is now healthy
