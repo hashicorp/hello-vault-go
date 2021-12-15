@@ -58,7 +58,7 @@ vault write auth/approle/role/dev-role/role-id role_id="${APPROLE_ROLE_ID}"
 vault token create \
     -id="${ORCHESTRATOR_TOKEN}" \
     -policy=trusted-orchestrator-policy \
-    -ttl=2h
+    -ttl=768h
 
 #####################################
 ########## STATIC SECRETS ###########
