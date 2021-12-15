@@ -45,7 +45,7 @@ services:
       - "8200:8200"
     depends_on:
       database:
-        condition: service_started
+        condition: service_healthy
 
   trusted-orchestrator:
     build: ./setup/trusted-orchestrator
