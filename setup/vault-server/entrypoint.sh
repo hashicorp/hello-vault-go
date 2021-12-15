@@ -55,7 +55,7 @@ vault write auth/approle/role/dev-role/role-id role_id="${APPROLE_ROLE_ID}"
 
 # configure a token with permissions to act as a trusted orchestrator
 # nb: for simplicity, we don't handle renewals in our simulated orchestrator
-# so we've set the ttl to a very long duration (768h), when this expires
+# so we've set the ttl to a very long duration (768h); when this expires
 # the web app will no longer receive a SecretID and subsequently fail on the
 # next attempted AppRole login
 # ref: https://www.vaultproject.io/docs/commands/token/create
