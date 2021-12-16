@@ -62,7 +62,7 @@ vault write auth/approle/role/dev-role/role-id role_id="${APPROLE_ROLE_ID}"
 vault token create \
     -id="${ORCHESTRATOR_TOKEN}" \
     -policy=trusted-orchestrator-policy \
-    -ttl=768h
+    -ttl="768h"
 
 #####################################
 ########## STATIC SECRETS ###########
@@ -106,4 +106,4 @@ vault write database/roles/dev-readonly \
 touch /tmp/healthy
 
 # keep container alive
-tail -f /dev/null & trap 'kill %1' SIGTERM ; wait
+tail -f /dev/null & trap 'kill %1' TERM ; wait

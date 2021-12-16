@@ -14,7 +14,7 @@ finish() {
   exit
 }
 
-trap finish SIGINT SIGTERM
+trap finish INT TERM
 
 # using the orchestrator token, generate a new wrapped SecretID on a regular cadence
 # ref: https://www.vaultproject.io/api-docs/auth/approle#generate-new-secret-id
@@ -26,7 +26,7 @@ while true; do
        --request POST \
        --header "X-Vault-Token: ${ORCHESTRATOR_TOKEN}" \
        --header "X-Vault-Wrap-TTL: 5m" \
-          ${VAULT_ADDRESS}/v1/auth/approle/role/dev-role/secret-id | jq -r '.wrap_info.token' > /tmp/secret
+          "${VAULT_ADDRESS}/v1/auth/approle/role/dev-role/secret-id" | jq -r '.wrap_info.token' > /tmp/secret
 
   echo "$(date +"%T"): $?"
   echo "$(date +"%T"): wrote wrapped secret id to /tmp/secret"
