@@ -73,7 +73,7 @@ vault token create \
 vault secrets enable -path=kv-v2 kv-v2
 
 # seed the kv-v2 store with an entry our web app will use
-vault kv put kv-v2/api-key api-key-field=my-secret-key
+vault kv put "${API_KEY_PATH}" "${API_KEY_FIELD}=my-secret-key"
 
 #####################################
 ########## DYNAMIC SECRETS ##########
