@@ -16,7 +16,7 @@ type VaultParameters struct {
 	approleRoleID       string
 	approleSecretIDFile string
 
-	// the locations / descriptors of our two secrets
+	// the locations / field names of our two secrets
 	apiKeyPath              string
 	apiKeyField             string
 	databaseCredentialsPath string
