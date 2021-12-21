@@ -10,6 +10,7 @@ services:
       VAULT_APPROLE_SECRET_ID_FILE: /tmp/secret
       VAULT_DATABASE_CREDS_PATH:    database/creds/dev-readonly
       VAULT_API_KEY_PATH:           kv-v2/data/api-key
+      VAULT_API_KEY_FIELD:          api-key-field
       DATABASE_HOSTNAME:            database
       DATABASE_PORT:                5432
       DATABASE_NAME:                postgres
@@ -38,9 +39,11 @@ services:
     environment:
       VAULT_DEV_ROOT_TOKEN_ID: root
       APPROLE_ROLE_ID:         demo-web-app
-      ORCHESTRATOR_TOKEN:      insecure_token
+      ORCHESTRATOR_TOKEN:      insecure-token
       DATABASE_HOSTNAME:       database
       DATABASE_PORT:           5432
+      API_KEY_PATH:            kv-v2/api-key
+      API_KEY_FIELD:           api-key-field
     ports:
       - "8200:8200"
     depends_on:
@@ -51,7 +54,7 @@ services:
     build: ./setup/trusted-orchestrator
     environment:
       VAULT_ADDRESS:      http://vault-server:8200
-      ORCHESTRATOR_TOKEN: insecure_token
+      ORCHESTRATOR_TOKEN: insecure-token
     volumes:
       - type:   volume
         source: trusted-orchestrator-volume
