@@ -16,8 +16,9 @@ type VaultParameters struct {
 	approleRoleID       string
 	approleSecretIDFile string
 
-	// the locations of our two secrets
+	// the locations / descriptors of our two secrets
 	apiKeyPath              string
+	apiKeyField             string
 	databaseCredentialsPath string
 }
 
@@ -94,22 +95,32 @@ func (v *Vault) login(ctx context.Context) (*vault.Secret, error) {
 }
 
 // GetSecretAPIKey fetches the latest version of secret api key from kv-v2
-func (v *Vault) GetSecretAPIKey(ctx context.Context) (map[string]interface{}, error) {
+func (v *Vault) GetSecretAPIKey(ctx context.Context) (string, error) {
 	log.Println("getting secret api key from vault")
 
 	secret, err := v.client.Logical().Read(v.parameters.apiKeyPath)
 	if err != nil {
-		return nil, fmt.Errorf("unable to read secret: %w", err)
+		return "", fmt.Errorf("unable to read secret: %w", err)
 	}
 
 	data, ok := secret.Data["data"].(map[string]interface{})
 	if !ok {
-		return nil, fmt.Errorf("malformed secret returned")
+		return "", fmt.Errorf("malformed secret returned")
+	}
+
+	apiKey, ok := data[v.parameters.apiKeyField]
+	if !ok {
+		return "", fmt.Errorf("the secret retrieved from vault is missing %q field", v.parameters.apiKeyField)
+	}
+
+	apiKeyString, ok := apiKey.(string)
+	if !ok {
+		return "", fmt.Errorf("unexpected secret key type for %q field", v.parameters.apiKeyField)
 	}
 
 	log.Println("getting secret api key from vault: success!")
 
-	return data, nil
+	return apiKeyString, nil
 }
 
 // GetDatabaseCredentials retrieves a new set of temporary database credentials
