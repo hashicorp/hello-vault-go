@@ -79,7 +79,7 @@ func run(ctx context.Context, env Environment) error {
 	go vault.RenewLoginPeriodically(ctx, token) // keep alive
 
 	// database
-	credentials, secret, err := vault.GetDatabaseCredentials(ctx)
+	credentials, secret, err := vault.GetDatabaseCredentials()
 	if err != nil {
 		return fmt.Errorf("unable to retrieve database credentials from vault: %w", err)
 	}

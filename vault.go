@@ -95,7 +95,7 @@ func (v *Vault) login(ctx context.Context) (*vault.Secret, error) {
 }
 
 // GetSecretAPIKey fetches the latest version of secret api key from kv-v2
-func (v *Vault) GetSecretAPIKey(ctx context.Context) (string, error) {
+func (v *Vault) GetSecretAPIKey() (string, error) {
 	log.Println("getting secret api key from vault")
 
 	secret, err := v.client.Logical().Read(v.parameters.apiKeyPath)
@@ -124,7 +124,7 @@ func (v *Vault) GetSecretAPIKey(ctx context.Context) (string, error) {
 }
 
 // GetDatabaseCredentials retrieves a new set of temporary database credentials
-func (v *Vault) GetDatabaseCredentials(ctx context.Context) (DatabaseCredentials, *vault.Secret, error) {
+func (v *Vault) GetDatabaseCredentials() (DatabaseCredentials, *vault.Secret, error) {
 	log.Println("getting temporary database credentials from vault")
 
 	secret, err := v.client.Logical().Read(v.parameters.databaseCredentialsPath)
