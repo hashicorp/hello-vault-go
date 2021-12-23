@@ -17,7 +17,7 @@ type Handlers struct {
 // (POST /payments) : demonstrates fetching a static secret from Vault and using it to talk to another service
 func (h *Handlers) CreatePayment(c *gin.Context) {
 	// retrieve the secret from Vault
-	apiKey, err := h.vault.GetSecretAPIKey(c.Request.Context())
+	apiKey, err := h.vault.GetSecretAPIKey()
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return

@@ -73,7 +73,7 @@ func (v *Vault) RenewDatabaseCredentialsPeriodically(
 			}
 
 			// database credentials have expired and need to be renewed
-			credentials, secret, err := v.GetDatabaseCredentials(ctx)
+			credentials, secret, err := v.GetDatabaseCredentials()
 			if err != nil {
 				log.Fatalf("database credentials error: %v", err) // simplified error handling
 			}
