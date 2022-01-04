@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"testing"
 
@@ -32,9 +31,6 @@ func TestGetProducts(t *testing.T) {
 }
 
 func sendAndVerify(t *testing.T, method, endpoint, expected string) {
-	/* */ log.Printf("%s %s request: started", method, endpoint)
-	defer log.Printf("%s %s request: done", method, endpoint)
-
 	request, err := http.NewRequest(method, endpoint, nil)
 	require.NoErrorf(t, err, "%s %s: could not form the request", method, endpoint)
 

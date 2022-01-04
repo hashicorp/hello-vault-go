@@ -1,7 +1,7 @@
 #!/bin/sh
 
-docker compose up -d --build
+docker compose up -d --build --quiet-pull
 
-go test
+go test -v
 
 docker compose down --volumes
