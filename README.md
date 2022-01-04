@@ -27,7 +27,7 @@ This step may take a few minutes to download the necessary dependencies.
 ```
 
 ```
-[+] Running 7/7
+[+] Running 8/8
  ⠿ Network hello-vault-go_default                          Created        0.1s
  ⠿ Volume "hello-vault-go_trusted-orchestrator-volume"     Created        0.0s
  ⠿ Container hello-vault-go-secure-service-1               Started        0.6s
@@ -35,6 +35,7 @@ This step may take a few minutes to download the necessary dependencies.
  ⠿ Container hello-vault-go-vault-server-1                 Started        1.3s
  ⠿ Container hello-vault-go-trusted-orchestrator-1         Started        8.6s
  ⠿ Container hello-vault-go-app-1                          Started       10.3s
+ ⠿ Container hello-vault-go-healthy-1                      Started       11.7s
 
 ```
 
