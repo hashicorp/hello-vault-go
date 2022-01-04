@@ -1,5 +1,12 @@
 package main
 
+//
+// The tests below assume that the docker-compose environment is up. Either
+// bring it up manually with docker compose up -d or use the helper script:
+//
+// ./run-tests.sh
+//
+
 import (
 	"fmt"
 	"io/ioutil"
@@ -10,13 +17,13 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-const address = "http://localhost:8080"
+const appAddress = "http://localhost:8080"
 
 func TestPostPayments(t *testing.T) {
 	sendAndVerify(
 		t,
 		http.MethodPost,
-		fmt.Sprintf("%s/payments", address),
+		fmt.Sprintf("%s/payments", appAddress),
 		`{"message":"hello world!"}`,
 	)
 }
@@ -25,12 +32,14 @@ func TestGetProducts(t *testing.T) {
 	sendAndVerify(
 		t,
 		http.MethodGet,
-		fmt.Sprintf("%s/products", address),
+		fmt.Sprintf("%s/products", appAddress),
 		`[{"id":1,"name":"Rustic Webcam"},{"id":2,"name":"Haunted Coloring Book"}]`,
 	)
 }
 
 func sendAndVerify(t *testing.T, method, endpoint, expected string) {
+	t.Logf("%s %s: sending request", method, endpoint)
+
 	request, err := http.NewRequest(method, endpoint, nil)
 	require.NoErrorf(t, err, "%s %s: could not form the request", method, endpoint)
 
