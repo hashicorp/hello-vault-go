@@ -8,5 +8,4 @@ require (
 	github.com/hashicorp/vault/api/auth/approle v0.1.0
 	github.com/jessevdk/go-flags v1.5.0
 	github.com/lib/pq v1.10.4
-	github.com/stretchr/testify v1.7.0
 )
