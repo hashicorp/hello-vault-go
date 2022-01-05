@@ -183,7 +183,7 @@ docker logs hello-vault-go-app-1 2>&1 | grep database
 ## Integration Tests
 
 The following script will bring up the docker-compose environment, run the
-integration tests, and bring down the environment:
+curl commands above, verify the output, and bring down the environment:
 
 ```shell-session
 ./run-tests.sh
