@@ -95,9 +95,10 @@ vault write database/config/my-postgresql-database \
 # rotate the password for 'vault_db_user', ensures the user is only accessible by Vault itself
 vault write -force database/config/my-postgresql-database
 
-# Allow vault to create roles dynamically with the same privileges as the
-# 'readonly' role created in our database's 3-roles.sql script.
-# Note: we use artificially low ttl values to demonstrate the renewal logic
+# Allow vault to create roles dynamically with the same privileges as the "readonly"
+# role created in our database's 3-roles.sql script.
+#
+# NOTE: we use artificially low ttl values to demonstrate the credential renewal logic
 vault write database/roles/dev-readonly \
     db_name=my-postgresql-database \
     creation_statements="CREATE ROLE \"{{name}}\" WITH LOGIN PASSWORD '{{password}}' VALID UNTIL '{{expiration}}'; GRANT readonly TO \"{{name}}\";" \
