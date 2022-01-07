@@ -22,12 +22,12 @@ retrieve secrets from HashiCorp [Vault][vault].
 
 This step may take a few minutes to download the necessary dependencies.
 
-```bash
+```shell-session
 ./run.sh
 ```
 
 ```
-[+] Running 7/7
+[+] Running 8/8
  ⠿ Network hello-vault-go_default                          Created        0.1s
  ⠿ Volume "hello-vault-go_trusted-orchestrator-volume"     Created        0.0s
  ⠿ Container hello-vault-go-secure-service-1               Started        0.6s
@@ -35,12 +35,13 @@ This step may take a few minutes to download the necessary dependencies.
  ⠿ Container hello-vault-go-vault-server-1                 Started        1.3s
  ⠿ Container hello-vault-go-trusted-orchestrator-1         Started        8.6s
  ⠿ Container hello-vault-go-app-1                          Started       10.3s
+ ⠿ Container hello-vault-go-healthy-1                      Started       11.7s
 
 ```
 
 Verify that the services started successfully:
 
-```bash
+```shell-session
 docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
 ```
 
@@ -59,7 +60,7 @@ hello-vault-go-database-1               Up About a minute (healthy)   0.0.0.0:54
 Our service will make a request to another service's restricted API endpoint
 using an API key value stored in Vault's static secrets engine.
 
-```bash
+```shell-session
 curl -s -X POST http://localhost:8080/payments | jq
 ```
 
@@ -71,7 +72,7 @@ curl -s -X POST http://localhost:8080/payments | jq
 
 Check the logs:
 
-```bash
+```shell-session
 docker logs hello-vault-go-app-1
 ```
 
@@ -89,7 +90,7 @@ Our application uses Vault's database secrets engine to generate dynamic
 database credentials, which are then used to connect to and retrieve data from a
 PostgreSQL database.
 
-```bash
+```shell-session
 curl -s -X GET http://localhost:8080/products | jq
 ```
 
@@ -108,7 +109,7 @@ curl -s -X GET http://localhost:8080/products | jq
 
 Check the logs:
 
-```bash
+```shell-session
 docker logs hello-vault-go-app-1
 ```
 
@@ -129,7 +130,7 @@ credentials.
 
 Examine the logs for how the Vault auth token is periodically renewed:
 
-```bash
+```shell-session
 docker logs hello-vault-go-app-1 2>&1 | grep auth
 ```
 
@@ -153,7 +154,7 @@ docker logs hello-vault-go-app-1 2>&1 | grep auth
 
 Examine the logs for database credentials renew / reconnect cycle:
 
-```bash
+```shell-session
 docker logs hello-vault-go-app-1 2>&1 | grep database
 ```
 
@@ -177,6 +178,15 @@ docker logs hello-vault-go-app-1 2>&1 | grep database
 2021/12/15 23:26:21 database credentials: successfully renewed; remaining lease duration: 180s
 2021/12/15 23:28:27 database credentials: successfully renewed; remaining lease duration: 167s
 2021/12/15 23:30:37 database credentials renew cycle: the secret can no longer be renewed
+```
+
+## Integration Tests
+
+The following script will bring up the docker-compose environment, run the
+curl commands above, verify the output, and bring down the environment:
+
+```shell-session
+./run-tests.sh
 ```
 
 ## Stack Design

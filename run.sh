@@ -1,6 +1,5 @@
 #!/bin/sh
 
-# (re)start application, Vault server, and database
+# (re)start application and its dependencies
 docker compose down --volumes
-docker compose build
-docker compose up -d
+docker compose up -d --build
