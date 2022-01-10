@@ -88,8 +88,8 @@ const (
 // their 'token_ttl' expiration times until one of the secrets is close to its
 // 'token_max_ttl' lease expiration time.
 func (v *Vault) renewLeases(ctx context.Context, authToken, databaseCredentialsLease *vault.Secret) (renewResult, error) {
-	/* */ log.Println("renew cycle: started")
-	defer log.Println("renew cycle: done")
+	/* */ log.Println("renew cycle: begin")
+	defer log.Println("renew cycle: end")
 
 	// auth token
 	authTokenWatcher, err := v.client.NewLifetimeWatcher(&vault.LifetimeWatcherInput{
