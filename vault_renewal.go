@@ -27,17 +27,17 @@ import (
 func (v *Vault) PeriodicallyRenewSecrets(
 	ctx context.Context,
 	authToken *vault.Secret,
-	databaseCredentials *vault.Secret,
+	databaseCredentialsLease *vault.Secret,
 	databaseReconnectFunc func(ctx context.Context, credentials DatabaseCredentials) error,
 ) {
 	/* */ log.Println("renew / recreate secrets loop: begin")
 	defer log.Println("renew / recreate secrets loop: end")
 
 	currentAuthToken := authToken
-	currentDatabaseCredentials := databaseCredentials
+	currentDatabaseCredentialsLease := databaseCredentialsLease
 
 	for {
-		r, err := v.renewLeases(ctx, currentAuthToken, currentDatabaseCredentials)
+		r, err := v.renewLeases(ctx, currentAuthToken, currentDatabaseCredentialsLease)
 		if err != nil {
 			log.Fatalf("renew error: %v", err) // simplified error handling
 		}
@@ -60,7 +60,7 @@ func (v *Vault) PeriodicallyRenewSecrets(
 		if r&expiredDatabaseCredentials != 0 {
 			log.Printf("database credentials: can no longer be renewed; will fetch new credentials & reconnect")
 
-			databaseCredentials, databaseCredentialsSecret, err := v.GetDatabaseCredentials()
+			databaseCredentials, databaseCredentialsLease, err := v.GetDatabaseCredentials()
 			if err != nil {
 				log.Fatalf("database credentials error: %v", err) // simplified error handling
 			}
@@ -69,7 +69,7 @@ func (v *Vault) PeriodicallyRenewSecrets(
 				log.Fatalf("database connection error: %v", err) // simplified error handling
 			}
 
-			currentDatabaseCredentials = databaseCredentialsSecret
+			currentDatabaseCredentialsLease = databaseCredentialsLease
 		}
 	}
 }
@@ -87,7 +87,7 @@ const (
 // instances to periodically renew the given secrets when they are close to
 // their 'token_ttl' expiration times until one of the secrets is close to its
 // 'token_max_ttl' lease expiration time.
-func (v *Vault) renewLeases(ctx context.Context, authToken, databaseCredentials *vault.Secret) (renewResult, error) {
+func (v *Vault) renewLeases(ctx context.Context, authToken, databaseCredentialsLease *vault.Secret) (renewResult, error) {
 	// auth token
 	log.Printf("auth token: starting lifetime watcher; lease duration %ds", authToken.LeaseDuration)
 
@@ -102,10 +102,10 @@ func (v *Vault) renewLeases(ctx context.Context, authToken, databaseCredentials 
 	defer authTokenWatcher.Stop()
 
 	// database credentials
-	log.Printf("database credentials: starting lifetime watcher; lease duration: %ds", databaseCredentials.LeaseDuration)
+	log.Printf("database credentials: starting lifetime watcher; lease duration: %ds", databaseCredentialsLease.LeaseDuration)
 
 	databaseCredentialsWatcher, err := v.client.NewLifetimeWatcher(&vault.LifetimeWatcherInput{
-		Secret: databaseCredentials,
+		Secret: databaseCredentialsLease,
 	})
 	if err != nil {
 		return renewError, fmt.Errorf("unable to initialize database credentials lifetime watcher: %w", err)
