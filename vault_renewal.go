@@ -46,7 +46,7 @@ func (v *Vault) PeriodicallyRenewSecrets(
 			return
 		}
 
-		if r&expiredAuthToken != 0 {
+		if r&expiringAuthToken != 0 {
 			log.Printf("auth token: can no longer be renewed; will log in again")
 
 			authToken, err := v.login(ctx)
@@ -57,7 +57,7 @@ func (v *Vault) PeriodicallyRenewSecrets(
 			currentAuthToken = authToken
 		}
 
-		if r&expiredDatabaseCredentials != 0 {
+		if r&expiringDatabaseCredentialsLease != 0 {
 			log.Printf("database credentials: can no longer be renewed; will fetch new credentials & reconnect")
 
 			databaseCredentials, databaseCredentialsLease, err := v.GetDatabaseCredentials()
@@ -79,8 +79,8 @@ type renewResult uint8
 const (
 	renewError renewResult = 1 << iota
 	exitRequested
-	expiredAuthToken
-	expiredDatabaseCredentials
+	expiringAuthToken                // will be revoked soon
+	expiringDatabaseCredentialsLease // will be revoked soon
 )
 
 // renewLeases is a blocking helper function that uses LifetimeWatcher
@@ -126,10 +126,10 @@ func (v *Vault) renewLeases(ctx context.Context, authToken, databaseCredentialsL
 		// return value of the channel to see if renewal was successful.
 		case err := <-authTokenWatcher.DoneCh():
 			// Leases created by a token get revoked when the token is revoked.
-			return expiredAuthToken | expiredDatabaseCredentials, err
+			return expiringAuthToken | expiringDatabaseCredentialsLease, err
 
 		case err := <-databaseCredentialsWatcher.DoneCh():
-			return expiredDatabaseCredentials, err
+			return expiringDatabaseCredentialsLease, err
 
 		// RenewCh is a channel that receives a message when a successful
 		// renewal takes place and includes metadata about the renewal.
