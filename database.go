@@ -95,7 +95,7 @@ func (db *Database) Reconnect(ctx context.Context, credentials DatabaseCredentia
 		}
 	}
 
-	// protect the connection swap with a mutex to avoid potential race conditions
+	// close the previous connection & swap in the new one behind a mutex
 	db.connectionMutex.Lock()
 
 	if db.connection != nil {
