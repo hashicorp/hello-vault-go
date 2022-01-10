@@ -127,24 +127,24 @@ func (v *Vault) GetSecretAPIKey() (string, error) {
 func (v *Vault) GetDatabaseCredentials() (DatabaseCredentials, *vault.Secret, error) {
 	log.Println("getting temporary database credentials from vault")
 
-	secret, err := v.client.Logical().Read(v.parameters.databaseCredentialsPath)
+	lease, err := v.client.Logical().Read(v.parameters.databaseCredentialsPath)
 	if err != nil {
 		return DatabaseCredentials{}, nil, fmt.Errorf("unable to read secret: %w", err)
 	}
 
-	credentialsBytes, err := json.Marshal(secret.Data)
+	b, err := json.Marshal(lease.Data)
 	if err != nil {
 		return DatabaseCredentials{}, nil, fmt.Errorf("malformed credentials returned: %w", err)
 	}
 
 	var credentials DatabaseCredentials
 
-	if err := json.Unmarshal(credentialsBytes, &credentials); err != nil {
+	if err := json.Unmarshal(b, &credentials); err != nil {
 		return DatabaseCredentials{}, nil, fmt.Errorf("unable to unmarshal credentials: %w", err)
 	}
 
 	log.Println("getting temporary database credentials from vault: success!")
 
 	// raw secret is included to renew database credentials
-	return credentials, secret, nil
+	return credentials, lease, nil
 }
