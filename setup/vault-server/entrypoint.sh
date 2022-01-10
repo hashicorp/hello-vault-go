@@ -48,15 +48,15 @@ vault write auth/approle/role/dev-role \
     token_ttl="2m" \
     token_max_ttl="6m"
 
-# Overwrite our RoleID with a known value to simplify our demo
+# Overwrite our role id with a known value to simplify our demo
 vault write auth/approle/role/dev-role/role-id role_id="${APPROLE_ROLE_ID}"
 
 #####################################
 ######### TOKEN AUTH METHOD #########
 #####################################
 
-# Configure a token with permissions to act as a trusted orchestrator.
-# For simplicity, we don't handle renewals in our simulated orchestrator
+# Configure a token with permissions to act as a trusted orchestrator. For
+# simplicity, we don't handle renewals in our simulated trusted orchestrator
 # so we've set the ttl to a very long duration (768h). When this expires
 # the web app will no longer receive a aecret id and subsequently fail on the
 # next attempted AppRole login.
