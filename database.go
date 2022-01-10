@@ -33,9 +33,9 @@ type Database struct {
 // NewDatabase establishes a database connection with the given Vault credentials
 func NewDatabase(ctx context.Context, parameters DatabaseParameters, credentials DatabaseCredentials) (*Database, error) {
 	database := &Database{
-		parameters:      parameters,
 		connection:      nil,
 		connectionMutex: sync.Mutex{},
+		parameters:      parameters,
 	}
 
 	// establish the first connection
@@ -47,7 +47,14 @@ func NewDatabase(ctx context.Context, parameters DatabaseParameters, credentials
 }
 
 func (db *Database) Close() error {
-	return db.connection.Close()
+	/* */ db.connectionMutex.Lock()
+	defer db.connectionMutex.Unlock()
+
+	if db.connection != nil {
+		return db.connection.Close()
+	}
+
+	return nil
 }
 
 // Reconnect will be called periodically to refresh the database connection
@@ -97,13 +104,10 @@ func (db *Database) Reconnect(ctx context.Context, credentials DatabaseCredentia
 
 	// close the previous connection & swap in the new one behind a mutex
 	db.connectionMutex.Lock()
-
 	if db.connection != nil {
 		db.connection.Close()
 	}
-
 	db.connection = connection
-
 	db.connectionMutex.Unlock()
 
 	log.Printf("connecting to %q database: success!", db.parameters.name)
@@ -120,10 +124,10 @@ type Product struct {
 // successfully established a database connection with the credentials from
 // Vault
 func (db *Database) GetProducts(ctx context.Context) ([]Product, error) {
-	const query = "SELECT id, name FROM products"
-
-	db.connectionMutex.Lock()
+	/* */ db.connectionMutex.Lock()
 	defer db.connectionMutex.Unlock()
+
+	const query = "SELECT id, name FROM products"
 
 	rows, err := db.connection.QueryContext(ctx, query)
 	if err != nil {
