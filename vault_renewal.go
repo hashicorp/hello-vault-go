@@ -23,7 +23,7 @@ import (
 // a freshly renewed token. See the link below for several ways to mitigate
 // this which are outside the scope of this code sample.
 //
-// ref: See https://www.vaultproject.io/docs/enterprise/consistency#vault-1-7-mitigations
+// ref: https://www.vaultproject.io/docs/enterprise/consistency#vault-1-7-mitigations
 func (v *Vault) PeriodicallyRenewSecrets(
 	ctx context.Context,
 	authToken *vault.Secret,
