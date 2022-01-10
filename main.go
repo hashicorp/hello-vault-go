@@ -62,7 +62,7 @@ func run(ctx context.Context, env Environment) error {
 	defer cancelContextFunc()
 
 	// vault
-	vault, token, err := NewVaultAppRoleClient(
+	vault, authToken, err := NewVaultAppRoleClient(
 		ctx,
 		VaultParameters{
 			address:                 env.VaultAddress,
@@ -76,10 +76,9 @@ func run(ctx context.Context, env Environment) error {
 	if err != nil {
 		return fmt.Errorf("unable to initialize vault connection @ %s: %w", env.VaultAddress, err)
 	}
-	go vault.RenewLoginPeriodically(ctx, token) // keep alive
 
 	// database
-	credentials, secret, err := vault.GetDatabaseCredentials()
+	databaseCredentials, databaseCredentialsSecret, err := vault.GetDatabaseCredentials()
 	if err != nil {
 		return fmt.Errorf("unable to retrieve database credentials from vault: %w", err)
 	}
@@ -92,7 +91,7 @@ func run(ctx context.Context, env Environment) error {
 			name:     env.DatabaseName,
 			timeout:  env.DatabaseTimeout,
 		},
-		credentials,
+		databaseCredentials,
 	)
 	if err != nil {
 		return fmt.Errorf("unable to connect to database @ %s:%s: %w", env.DatabaseHostname, env.DatabasePort, err)
@@ -100,7 +99,9 @@ func run(ctx context.Context, env Environment) error {
 	defer func() {
 		_ = database.Close()
 	}()
-	go vault.RenewDatabaseCredentialsPeriodically(ctx, secret, database.Reconnect) // keep alive
+
+	// lease renewal
+	go vault.PeriodicallyRenewSecrets(ctx, authToken, databaseCredentialsSecret, database.Reconnect)
 
 	// handlers & routes
 	h := Handlers{
