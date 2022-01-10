@@ -9,11 +9,10 @@ import (
 )
 
 // Once you've set the token for your Vault client, you will need to
-// periodically renew its lease. Likewise, the database credentials lease
-// will expire at some point and also needs to be renewed periodically.
+// periodically renew it. Likewise, the database credentials lease will expire
+// at some point and also needs to be renewed periodically.
 //
-// A function like this should be run as a goroutine to avoid blocking.
-//
+// A function like this one should be run as a goroutine to avoid blocking.
 // Production applications may also wish to be more tolerant of failures and
 // retry rather than exiting.
 //
