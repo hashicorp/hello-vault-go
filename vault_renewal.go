@@ -86,6 +86,7 @@ const (
 // their 'token_ttl' expiration times until one of the secrets is close to its
 // 'token_max_ttl' lease expiration time.
 func (v *Vault) renewLeases(ctx context.Context, authToken, databaseCredentials *vault.Secret) (renewResult, error) {
+	// auth token
 	log.Printf("auth token: starting lifetime watcher; lease duration %ds", authToken.LeaseDuration)
 
 	authTokenWatcher, err := v.client.NewLifetimeWatcher(&vault.LifetimeWatcherInput{
@@ -98,6 +99,7 @@ func (v *Vault) renewLeases(ctx context.Context, authToken, databaseCredentials 
 	go authTokenWatcher.Start()
 	defer authTokenWatcher.Stop()
 
+	// database credentials
 	log.Printf("database credentials: starting lifetime watcher; lease duration: %ds", databaseCredentials.LeaseDuration)
 
 	databaseCredentialsWatcher, err := v.client.NewLifetimeWatcher(&vault.LifetimeWatcherInput{
@@ -110,6 +112,7 @@ func (v *Vault) renewLeases(ctx context.Context, authToken, databaseCredentials 
 	go databaseCredentialsWatcher.Start()
 	defer databaseCredentialsWatcher.Stop()
 
+	//
 	for {
 		select {
 		case <-ctx.Done():
@@ -121,8 +124,7 @@ func (v *Vault) renewLeases(ctx context.Context, authToken, databaseCredentials 
 		// should attempt a re-read of the secret. Clients should check the
 		// return value of the channel to see if renewal was successful.
 		case err := <-authTokenWatcher.DoneCh():
-			// Child token (database credentials) is revoked when the parent
-			// auth token is revoked.
+			// Leases created by a token get revoked when the token is revoked.
 			return expiredAuthToken | expiredDatabaseCredentials, err
 
 		case err := <-databaseCredentialsWatcher.DoneCh():
@@ -130,8 +132,8 @@ func (v *Vault) renewLeases(ctx context.Context, authToken, databaseCredentials 
 
 		// RenewCh is a channel that receives a message when a successful
 		// renewal takes place and includes metadata about the renewal.
-		case info := <-authTokenWatcher.RenewCh():
-			log.Printf("auth token: successfully renewed; remaining lease duration: %ds", info.Secret.LeaseDuration)
+		case <-authTokenWatcher.RenewCh():
+			log.Printf("auth token: successfully renewed")
 
 		case info := <-databaseCredentialsWatcher.RenewCh():
 			log.Printf("database credentials: successfully renewed; remaining lease duration: %ds", info.Secret.LeaseDuration)
