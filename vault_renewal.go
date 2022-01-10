@@ -65,7 +65,9 @@ func (v *Vault) PeriodicallyRenewSecrets(
 				log.Fatalf("database credentials error: %v", err) // simplified error handling
 			}
 
-			databaseReconnectFunc(ctx, databaseCredentials)
+			if err := databaseReconnectFunc(ctx, databaseCredentials); err != nil {
+				log.Fatalf("database connection error: %v", err) // simplified error handling
+			}
 
 			currentDatabaseCredentials = databaseCredentialsSecret
 		}
@@ -112,7 +114,7 @@ func (v *Vault) renewLeases(ctx context.Context, authToken, databaseCredentials 
 	go databaseCredentialsWatcher.Start()
 	defer databaseCredentialsWatcher.Stop()
 
-	//
+	// monitor events from both watchers
 	for {
 		select {
 		case <-ctx.Done():
