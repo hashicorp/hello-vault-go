@@ -47,7 +47,7 @@ func NewDatabase(ctx context.Context, parameters DatabaseParameters, credentials
 }
 
 func (db *Database) Close() error {
-	return db.Close()
+	return db.connection.Close()
 }
 
 // Reconnect will be called periodically to refresh the database connection
@@ -97,7 +97,13 @@ func (db *Database) Reconnect(ctx context.Context, credentials DatabaseCredentia
 
 	// protect the connection swap with a mutex to avoid potential race conditions
 	db.connectionMutex.Lock()
+
+	if db.connection != nil {
+		db.connection.Close()
+	}
+
 	db.connection = connection
+
 	db.connectionMutex.Unlock()
 
 	log.Printf("connecting to %q database: success!", db.parameters.name)
