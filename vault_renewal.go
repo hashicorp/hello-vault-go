@@ -121,8 +121,8 @@ func (v *Vault) renewLeases(ctx context.Context, authToken, databaseCredentials 
 		// should attempt a re-read of the secret. Clients should check the
 		// return value of the channel to see if renewal was successful.
 		case err := <-authTokenWatcher.DoneCh():
-			// Marking database credentials as (also) expired here because any
-			// leasesmcreated by a token get revoked when the token is revoked.
+			// Child token (database credentials) is revoked when the parent
+			// auth token is revoked.
 			return expiredAuthToken | expiredDatabaseCredentials, err
 
 		case err := <-databaseCredentialsWatcher.DoneCh():
