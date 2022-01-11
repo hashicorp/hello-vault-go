@@ -98,7 +98,7 @@ func run(ctx context.Context, env Environment) error {
 		_ = database.Close()
 	}()
 
-	// start ths lease renewal goroutine & join it on exit
+	// start the secret renewal goroutine & join it on exit
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go func() {
