@@ -78,9 +78,9 @@ docker logs hello-vault-go-app-1
 
 ```log
 ...
-2021/12/15 23:15:36 getting secret api key from vault
-2021/12/15 23:15:36 getting secret api key from vault: success!
-[GIN] 2021/12/15 23:15:36 | 200 |    3.219167ms |    192.168.96.1 | POST     "/payments"
+2022/01/11 20:29:01 getting secret api key from vault
+2022/01/11 20:29:01 getting secret api key from vault: success!
+[GIN] 2022/01/11 - 20:29:01 | 200 |    7.366042ms |   192.168.192.1 | POST     "/payments"
 ```
 
 ### 3. Try out `GET /products` endpoint (dynamic secrets workflow)
@@ -114,19 +114,19 @@ docker logs hello-vault-go-app-1
 ```
 
 ```log
-2021/12/15 23:17:49 getting temporary database credentials from vault
-2021/12/15 23:17:49 getting temporary database credentials from vault: success!
-2021/12/15 23:17:49 connecting to "postgres" database @ database:5432 with username "v-approle-dev-read-dBbQdpLrIv8Xyh8nwzSX-1639610269"
-2021/12/15 23:17:49 connecting to "postgres" database: success!
+2022/01/11 20:22:55 getting temporary database credentials from vault
+2022/01/11 20:22:55 getting temporary database credentials from vault: success!
+2022/01/11 20:22:55 connecting to "postgres" database @ database:5432 with username "v-approle-dev-read-SHPJSHXdVWJ5dTdE22TA-1641932575"
+2022/01/11 20:22:55 connecting to "postgres" database: success!
 ...
-[GIN] 2021/12/15 - 23:18:22 | 200 |    2.559083ms |    192.168.96.1 | GET      "/products"
+[GIN] 2022/01/11 - 20:29:10 | 200 |    2.781958ms |   192.168.192.1 | GET      "/products"
 ```
 
 ### 4. Examine the logs for renew logic
 
 One of the complexities of dealing with short-lived secrets is that they must be
 renewed periodically. This includes authentication tokens and database
-credentials.
+credential leases.
 
 Examine the logs for how the Vault auth token is periodically renewed:
 
@@ -135,55 +135,59 @@ docker logs hello-vault-go-app-1 2>&1 | grep auth
 ```
 
 ```log
-2021/12/15 23:17:49 logging in to vault with approle auth; role id: demo-web-app
-2021/12/15 23:17:49 logging in to vault with approle auth: success!
-2021/12/15 23:17:49 auth token renew / login loop: begin
-2021/12/15 23:17:49 auth token renew cycle: started; lease duration: 0s
-2021/12/15 23:17:49 auth token: successfully renewed; remaining lease duration: 0s
-2021/12/15 23:19:15 auth token: successfully renewed; remaining lease duration: 0s
-2021/12/15 23:20:40 auth token: successfully renewed; remaining lease duration: 0s
-2021/12/15 23:22:06 auth token: successfully renewed; remaining lease duration: 0s
-2021/12/15 23:23:21 auth token: successfully renewed; remaining lease duration: 0s
-2021/12/15 23:23:21 auth token renew cycle: the secret can no longer be renewed
-2021/12/15 23:23:21 logging in to vault with approle auth; role id: demo-web-app
-2021/12/15 23:23:21 logging in to vault with approle auth: success!
-2021/12/15 23:23:21 auth token renew cycle: started; lease duration: 0s
-2021/12/15 23:23:21 auth token: successfully renewed; remaining lease duration: 0s
-2021/12/15 23:24:46 auth token: successfully renewed; remaining lease duration: 0s
+2022/01/11 20:22:55 logging in to vault with approle auth; role id: demo-web-app
+2022/01/11 20:22:55 logging in to vault with approle auth: success!
+2022/01/11 20:22:55 auth token: successfully renewed
+2022/01/11 20:24:21 auth token: successfully renewed
+2022/01/11 20:25:47 auth token: successfully renewed
+2022/01/11 20:27:13 auth token: successfully renewed
+2022/01/11 20:27:33 auth token: successfully renewed
+2022/01/11 20:28:34 auth token: successfully renewed
+2022/01/11 20:28:34 auth token: can no longer be renewed; will log in again
+2022/01/11 20:28:34 logging in to vault with approle auth; role id: demo-web-app
+2022/01/11 20:28:34 logging in to vault with approle auth: success!
+2022/01/11 20:28:34 auth token: successfully renewed
+2022/01/11 20:29:58 auth token: successfully renewed
+2022/01/11 20:31:23 auth token: successfully renewed
 ```
 
-Examine the logs for database credentials renew / reconnect cycle:
+Examine the logs for database credentials renew / reconnect cycle.
+
+> **NOTE**: the second time we reconnect to the database (at `20:28:34` in the
+> log) is due to the auth token expiring. Any leases created by a token get
+> revoked when the token is revoked.
 
 ```shell-session
 docker logs hello-vault-go-app-1 2>&1 | grep database
 ```
 
 ```log
-2021/12/15 23:17:49 getting temporary database credentials from vault
-2021/12/15 23:17:49 getting temporary database credentials from vault: success!
-2021/12/15 23:17:49 connecting to "postgres" database @ database:5432 with username "v-approle-dev-read-dBbQdpLrIv8Xyh8nwzSX-1639610269"
-2021/12/15 23:17:49 connecting to "postgres" database: success!
-2021/12/15 23:17:49 database credentials renew / reconnect loop: begin
-2021/12/15 23:17:49 database credentials renew cycle: started; lease duration: 180s
-2021/12/15 23:17:49 database credentials: successfully renewed; remaining lease duration: 180s
-2021/12/15 23:19:57 database credentials: successfully renewed; remaining lease duration: 180s
-2021/12/15 23:22:06 database credentials: successfully renewed; remaining lease duration: 163s
-2021/12/15 23:24:14 database credentials renew cycle: the secret can no longer be renewed
-2021/12/15 23:24:14 getting temporary database credentials from vault
-2021/12/15 23:24:14 getting temporary database credentials from vault: success!
-2021/12/15 23:24:14 connecting to "postgres" database @ database:5432 with username "v-approle-dev-read-TG9mg6avrhBO09f1HjEd-1639610654"
-2021/12/15 23:24:14 connecting to "postgres" database: success!
-2021/12/15 23:24:14 database credentials renew cycle: started; lease duration: 180s
-2021/12/15 23:24:14 database credentials: successfully renewed; remaining lease duration: 180s
-2021/12/15 23:26:21 database credentials: successfully renewed; remaining lease duration: 180s
-2021/12/15 23:28:27 database credentials: successfully renewed; remaining lease duration: 167s
-2021/12/15 23:30:37 database credentials renew cycle: the secret can no longer be renewed
+2022/01/11 20:22:55 getting temporary database credentials from vault
+2022/01/11 20:22:55 getting temporary database credentials from vault: success!
+2022/01/11 20:22:55 connecting to "postgres" database @ database:5432 with username "v-approle-dev-read-SHPJSHXdVWJ5dTdE22TA-1641932575"
+2022/01/11 20:22:55 connecting to "postgres" database: success!
+2022/01/11 20:22:55 database credentials: successfully renewed; remaining lease duration: 100s
+2022/01/11 20:24:07 database credentials: successfully renewed; remaining lease duration: 100s
+2022/01/11 20:25:20 database credentials: successfully renewed; remaining lease duration: 100s
+2022/01/11 20:26:33 database credentials: successfully renewed; remaining lease duration: 82s
+2022/01/11 20:27:33 database credentials: successfully renewed; remaining lease duration: 22s
+2022/01/11 20:27:33 database credentials: can no longer be renewed; will fetch new credentials & reconnect
+2022/01/11 20:27:33 getting temporary database credentials from vault
+2022/01/11 20:27:33 getting temporary database credentials from vault: success!
+2022/01/11 20:27:33 connecting to "postgres" database @ database:5432 with username "v-approle-dev-read-96y8N3aQdliwjo4bfpuD-1641932853"
+2022/01/11 20:27:33 connecting to "postgres" database: success!
+2022/01/11 20:27:33 database credentials: successfully renewed; remaining lease duration: 100s
+2022/01/11 20:28:34 database credentials: can no longer be renewed; will fetch new credentials & reconnect
+2022/01/11 20:28:34 getting temporary database credentials from vault
+2022/01/11 20:28:34 getting temporary database credentials from vault: success!
+2022/01/11 20:28:34 connecting to "postgres" database @ database:5432 with username "v-approle-dev-read-Yzob1xVLehrxpZzLIHJl-1641932914"
+2022/01/11 20:28:34 connecting to "postgres" database: success!
 ```
 
 ## Integration Tests
 
-The following script will bring up the docker-compose environment, run the
-curl commands above, verify the output, and bring down the environment:
+The following script will bring up the docker-compose environment, run the curl
+commands above, verify the output, and bring down the environment:
 
 ```shell-session
 ./run-tests.sh
