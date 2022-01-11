@@ -55,7 +55,7 @@ func NewDatabase(ctx context.Context, parameters DatabaseParameters, credentials
 // since the dynamic credentials expire after some time, it will:
 //   1. construct a connection string using the given credentials
 //   2. establish a database connection
-//   3. overwrite the existing connection with the new one behind a mutex
+//   3. close & replace the existing connection with the new one behind a mutex
 func (db *Database) Reconnect(ctx context.Context, credentials DatabaseCredentials) error {
 	ctx, cancelContextFunc := context.WithTimeout(ctx, db.parameters.timeout)
 	defer cancelContextFunc()
