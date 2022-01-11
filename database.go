@@ -30,6 +30,11 @@ type Database struct {
 	parameters      DatabaseParameters
 }
 
+type Product struct {
+	ID   int    `json:"id"`
+	Name string `json:"name"`
+}
+
 // NewDatabase establishes a database connection with the given Vault credentials
 func NewDatabase(ctx context.Context, parameters DatabaseParameters, credentials DatabaseCredentials) (*Database, error) {
 	database := &Database{
@@ -44,17 +49,6 @@ func NewDatabase(ctx context.Context, parameters DatabaseParameters, credentials
 	}
 
 	return database, nil
-}
-
-func (db *Database) Close() error {
-	/* */ db.connectionMutex.Lock()
-	defer db.connectionMutex.Unlock()
-
-	if db.connection != nil {
-		return db.connection.Close()
-	}
-
-	return nil
 }
 
 // Reconnect will be called periodically to refresh the database connection
@@ -102,29 +96,35 @@ func (db *Database) Reconnect(ctx context.Context, credentials DatabaseCredentia
 		}
 	}
 
-	db.closeResetConnection(connection)
+	db.closeReplaceConnection(connection)
 
 	log.Printf("connecting to %q database: success!", db.parameters.name)
 
 	return nil
 }
 
-func (db *Database) closeResetConnection(new *sql.DB) {
+func (db *Database) closeReplaceConnection(new *sql.DB) {
 	/* */ db.connectionMutex.Lock()
 	defer db.connectionMutex.Unlock()
 
 	// close the existing connection, if exists
 	if db.connection != nil {
-		db.connection.Close()
+		_ = db.connection.Close()
 	}
 
 	// replace with a new connection
 	db.connection = new
 }
 
-type Product struct {
-	ID   int    `json:"id"`
-	Name string `json:"name"`
+func (db *Database) Close() error {
+	/* */ db.connectionMutex.Lock()
+	defer db.connectionMutex.Unlock()
+
+	if db.connection != nil {
+		return db.connection.Close()
+	}
+
+	return nil
 }
 
 // GetProducts is a simple query function to demonstrate that we have
