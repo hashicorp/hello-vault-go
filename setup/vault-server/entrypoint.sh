@@ -58,7 +58,7 @@ vault write auth/approle/role/dev-role/role-id role_id="${APPROLE_ROLE_ID}"
 # Configure a token with permissions to act as a trusted orchestrator. For
 # simplicity, we don't handle renewals in our simulated trusted orchestrator
 # so we've set the ttl to a very long duration (768h). When this expires
-# the web app will no longer receive a aecret id and subsequently fail on the
+# the web app will no longer receive a secret id and subsequently fail on the
 # next attempted AppRole login.
 # ref: https://www.vaultproject.io/docs/commands/token/create
 vault token create \
@@ -70,7 +70,7 @@ vault token create \
 ########## STATIC SECRETS ###########
 #####################################
 
-# Enable a kv-v2 secrets engine, passing in the path parameter
+# Enable the kv-v2 secrets engine, passing in the path parameter
 # ref: https://www.vaultproject.io/docs/secrets/kv/kv-v2
 vault secrets enable -path=kv-v2 kv-v2
 
@@ -81,7 +81,7 @@ vault kv put "${API_KEY_PATH}" "${API_KEY_FIELD}=my-secret-key"
 ########## DYNAMIC SECRETS ##########
 #####################################
 
-# Enable a database secrets engine
+# Enable the database secrets engine
 # ref: https://www.vaultproject.io/docs/secrets/databases
 vault secrets enable database
 
