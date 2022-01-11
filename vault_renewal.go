@@ -73,6 +73,7 @@ func (v *Vault) PeriodicallyRenewLeases(
 	}
 }
 
+// renewResult is a bitmask which could contain one or more of the values below
 type renewResult uint8
 
 const (
