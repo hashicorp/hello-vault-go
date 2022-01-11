@@ -154,7 +154,7 @@ docker logs hello-vault-go-app-1 2>&1 | grep auth
 2022/01/11 20:31:23 auth token: successfully renewed
 ```
 
-Examine the logs for database credentials renew / reconnect cycle.
+Examine the logs for database credentials renew / reconnect cycle:
 
 ```shell-session
 docker logs hello-vault-go-app-1 2>&1 | grep database
