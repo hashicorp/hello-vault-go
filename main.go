@@ -101,7 +101,7 @@ func run(ctx context.Context, env Environment) error {
 	}()
 
 	// lease renewal
-	go vault.PeriodicallyRenewSecrets(ctx, authToken, databaseCredentialsLease, database.Reconnect)
+	go vault.PeriodicallyRenewLeases(ctx, authToken, databaseCredentialsLease, database.Reconnect)
 
 	// handlers & routes
 	h := Handlers{

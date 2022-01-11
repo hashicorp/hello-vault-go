@@ -23,7 +23,7 @@ import (
 // this which are outside the scope of this code sample.
 //
 // ref: https://www.vaultproject.io/docs/enterprise/consistency#vault-1-7-mitigations
-func (v *Vault) PeriodicallyRenewSecrets(
+func (v *Vault) PeriodicallyRenewLeases(
 	ctx context.Context,
 	authToken *vault.Secret,
 	databaseCredentialsLease *vault.Secret,
