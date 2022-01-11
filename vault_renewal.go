@@ -23,7 +23,7 @@ import (
 // this which are outside the scope of this code sample.
 //
 // ref: https://www.vaultproject.io/docs/enterprise/consistency#vault-1-7-mitigations
-func (v *Vault) PeriodicallyRenewSecrets(
+func (v *Vault) PeriodicallyRenewLeases(
 	ctx context.Context,
 	authToken *vault.Secret,
 	databaseCredentialsLease *vault.Secret,
@@ -36,16 +36,16 @@ func (v *Vault) PeriodicallyRenewSecrets(
 	currentDatabaseCredentialsLease := databaseCredentialsLease
 
 	for {
-		r, err := v.renewLeases(ctx, currentAuthToken, currentDatabaseCredentialsLease)
+		result, err := v.renewLeases(ctx, currentAuthToken, currentDatabaseCredentialsLease)
 		if err != nil {
 			log.Fatalf("renew error: %v", err) // simplified error handling
 		}
 
-		if r&exitRequested != 0 {
+		if result&exitRequested != 0 {
 			return
 		}
 
-		if r&expiringAuthToken != 0 {
+		if result&expiringAuthToken != 0 {
 			log.Printf("auth token: can no longer be renewed; will log in again")
 
 			authToken, err := v.login(ctx)
@@ -56,7 +56,7 @@ func (v *Vault) PeriodicallyRenewSecrets(
 			currentAuthToken = authToken
 		}
 
-		if r&expiringDatabaseCredentialsLease != 0 {
+		if result&expiringDatabaseCredentialsLease != 0 {
 			log.Printf("database credentials: can no longer be renewed; will fetch new credentials & reconnect")
 
 			databaseCredentials, databaseCredentialsLease, err := v.GetDatabaseCredentials()
@@ -73,6 +73,7 @@ func (v *Vault) PeriodicallyRenewSecrets(
 	}
 }
 
+// renewResult is a bitmask which could contain one or more of the values below
 type renewResult uint8
 
 const (

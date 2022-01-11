@@ -30,6 +30,11 @@ type Database struct {
 	parameters      DatabaseParameters
 }
 
+type Product struct {
+	ID   int    `json:"id"`
+	Name string `json:"name"`
+}
+
 // NewDatabase establishes a database connection with the given Vault credentials
 func NewDatabase(ctx context.Context, parameters DatabaseParameters, credentials DatabaseCredentials) (*Database, error) {
 	database := &Database{
@@ -46,22 +51,11 @@ func NewDatabase(ctx context.Context, parameters DatabaseParameters, credentials
 	return database, nil
 }
 
-func (db *Database) Close() error {
-	/* */ db.connectionMutex.Lock()
-	defer db.connectionMutex.Unlock()
-
-	if db.connection != nil {
-		return db.connection.Close()
-	}
-
-	return nil
-}
-
 // Reconnect will be called periodically to refresh the database connection
 // since the dynamic credentials expire after some time, it will:
 //   1. construct a connection string using the given credentials
 //   2. establish a database connection
-//   3. overwrite the existing connection with the new one behind a mutex
+//   3. close & replace the existing connection with the new one behind a mutex
 func (db *Database) Reconnect(ctx context.Context, credentials DatabaseCredentials) error {
 	ctx, cancelContextFunc := context.WithTimeout(ctx, db.parameters.timeout)
 	defer cancelContextFunc()
@@ -102,22 +96,35 @@ func (db *Database) Reconnect(ctx context.Context, credentials DatabaseCredentia
 		}
 	}
 
-	// close the previous connection & swap in the new one behind a mutex
-	db.connectionMutex.Lock()
-	if db.connection != nil {
-		db.connection.Close()
-	}
-	db.connection = connection
-	db.connectionMutex.Unlock()
+	db.closeReplaceConnection(connection)
 
 	log.Printf("connecting to %q database: success!", db.parameters.name)
 
 	return nil
 }
 
-type Product struct {
-	ID   int    `json:"id"`
-	Name string `json:"name"`
+func (db *Database) closeReplaceConnection(new *sql.DB) {
+	/* */ db.connectionMutex.Lock()
+	defer db.connectionMutex.Unlock()
+
+	// close the existing connection, if exists
+	if db.connection != nil {
+		_ = db.connection.Close()
+	}
+
+	// replace with a new connection
+	db.connection = new
+}
+
+func (db *Database) Close() error {
+	/* */ db.connectionMutex.Lock()
+	defer db.connectionMutex.Unlock()
+
+	if db.connection != nil {
+		return db.connection.Close()
+	}
+
+	return nil
 }
 
 // GetProducts is a simple query function to demonstrate that we have
