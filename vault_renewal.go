@@ -13,8 +13,8 @@ import (
 // at some point and also needs to be renewed periodically.
 //
 // A function like this one should be run as a goroutine to avoid blocking.
-// Production applications may also wish to be more tolerant of failures and
-// retry rather than exiting.
+// Production applications may also need to be more tolerant of failures and
+// retry on errors rather than exiting.
 //
 // Additionally, enterprise Vault users should be aware that due to eventual
 // consistency, the API may return unexpected errors when running Vault with
