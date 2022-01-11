@@ -36,16 +36,16 @@ func (v *Vault) PeriodicallyRenewLeases(
 	currentDatabaseCredentialsLease := databaseCredentialsLease
 
 	for {
-		r, err := v.renewLeases(ctx, currentAuthToken, currentDatabaseCredentialsLease)
+		result, err := v.renewLeases(ctx, currentAuthToken, currentDatabaseCredentialsLease)
 		if err != nil {
 			log.Fatalf("renew error: %v", err) // simplified error handling
 		}
 
-		if r&exitRequested != 0 {
+		if result&exitRequested != 0 {
 			return
 		}
 
-		if r&expiringAuthToken != 0 {
+		if result&expiringAuthToken != 0 {
 			log.Printf("auth token: can no longer be renewed; will log in again")
 
 			authToken, err := v.login(ctx)
@@ -56,7 +56,7 @@ func (v *Vault) PeriodicallyRenewLeases(
 			currentAuthToken = authToken
 		}
 
-		if r&expiringDatabaseCredentialsLease != 0 {
+		if result&expiringDatabaseCredentialsLease != 0 {
 			log.Printf("database credentials: can no longer be renewed; will fetch new credentials & reconnect")
 
 			databaseCredentials, databaseCredentialsLease, err := v.GetDatabaseCredentials()
