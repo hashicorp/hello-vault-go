@@ -128,6 +128,9 @@ One of the complexities of dealing with short-lived secrets is that they must be
 renewed periodically. This includes authentication tokens and database
 credential leases.
 
+> **NOTE**: it may be easier to see how the secrets are renewed in
+> [this diagram](images/renew-diagram.svg).
+
 Examine the logs for how the Vault auth token is periodically renewed:
 
 ```shell-session
@@ -152,10 +155,6 @@ docker logs hello-vault-go-app-1 2>&1 | grep auth
 ```
 
 Examine the logs for database credentials renew / reconnect cycle.
-
-> **NOTE**: the second time we reconnect to the database (at `20:28:34` in the
-> log) is due to the auth token expiring. Any leases created by a token get
-> revoked when the token is revoked.
 
 ```shell-session
 docker logs hello-vault-go-app-1 2>&1 | grep database
@@ -183,6 +182,10 @@ docker logs hello-vault-go-app-1 2>&1 | grep database
 2022/01/11 20:28:34 connecting to "postgres" database @ database:5432 with username "v-approle-dev-read-Yzob1xVLehrxpZzLIHJl-1641932914"
 2022/01/11 20:28:34 connecting to "postgres" database: success!
 ```
+
+> **NOTE**: the third time we fetch database credentials (at `20:28:34` in the
+> log) is due to the auth token expiring. Any leases created by a token get
+> revoked when the token is revoked.
 
 ## Integration Tests
 
