@@ -102,17 +102,24 @@ func (db *Database) Reconnect(ctx context.Context, credentials DatabaseCredentia
 		}
 	}
 
-	// close the previous connection & swap in the new one behind a mutex
-	db.connectionMutex.Lock()
-	if db.connection != nil {
-		db.connection.Close()
-	}
-	db.connection = connection
-	db.connectionMutex.Unlock()
+	db.closeResetConnection(connection)
 
 	log.Printf("connecting to %q database: success!", db.parameters.name)
 
 	return nil
+}
+
+func (db *Database) closeResetConnection(new *sql.DB) {
+	/* */ db.connectionMutex.Lock()
+	defer db.connectionMutex.Unlock()
+
+	// close the existing connection, if exists
+	if db.connection != nil {
+		db.connection.Close()
+	}
+
+	// replace with a new connection
+	db.connection = new
 }
 
 type Product struct {
