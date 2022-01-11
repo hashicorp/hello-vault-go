@@ -126,7 +126,7 @@ docker logs hello-vault-go-app-1
 
 One of the complexities of dealing with short-lived secrets is that they must be
 renewed periodically. This includes authentication tokens and database
-credential leases.
+credential [leases][vault-leases].
 
 > **NOTE**: it may be easier to see how the secrets are renewed in
 > [this diagram](images/renew-diagram.svg).
@@ -185,7 +185,7 @@ docker logs hello-vault-go-app-1 2>&1 | grep database
 
 > **NOTE**: the third time we fetch database credentials (at `20:28:34` in the
 > log) is due to the auth token expiring. Any leases created by a token get
-> revoked when the token is revoked.
+> revoked when the token is revoked, which includes our database credentials.
 
 ## Integration Tests
 
@@ -210,6 +210,7 @@ commands above, verify the output, and bring down the environment:
 ![arch overview](images/arch-overview.svg)
 
 [vault]:           https://www.vaultproject.io/
+[vault-leases]:    https://www.vaultproject.io/docs/concepts/lease
 [docker]:          https://docs.docker.com/get-docker/
 [docker-compose]:  https://docs.docker.com/compose/install/
 [curl]:            https://curl.se/
