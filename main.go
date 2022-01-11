@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"sync"
 	"time"
 
+	"github.com/fvbock/endless"
 	"github.com/gin-gonic/gin"
 	"github.com/jessevdk/go-flags"
 )
@@ -54,10 +56,6 @@ func main() {
 }
 
 func run(ctx context.Context, env Environment) error {
-	// WARNING: the goroutines in this function have simplified error handling
-	// and could escape the scope of the function. Production applications
-	// may want to add more complex error handling and leak protection logic.
-
 	ctx, cancelContextFunc := context.WithCancel(ctx)
 	defer cancelContextFunc()
 
@@ -100,8 +98,17 @@ func run(ctx context.Context, env Environment) error {
 		_ = database.Close()
 	}()
 
-	// lease renewal
-	go vault.PeriodicallyRenewSecrets(ctx, authToken, databaseCredentialsLease, database.Reconnect)
+	// start ths lease renewal goroutine & join it on exit
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		vault.PeriodicallyRenewSecrets(ctx, authToken, databaseCredentialsLease, database.Reconnect)
+		wg.Done()
+	}()
+	defer func() {
+		cancelContextFunc()
+		wg.Wait()
+	}()
 
 	// handlers & routes
 	h := Handlers{
@@ -126,7 +133,7 @@ func run(ctx context.Context, env Environment) error {
 	// demonstrates database authentication with dynamic secrets
 	r.GET("/products", h.GetProducts)
 
-	r.Run(env.MyAddress)
+	endless.ListenAndServe(env.MyAddress, r)
 
 	return nil
 }
