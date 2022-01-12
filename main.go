@@ -98,7 +98,7 @@ func run(ctx context.Context, env Environment) error {
 		_ = database.Close()
 	}()
 
-	// start the lease renewal goroutine & join it on exit
+	// start the lease-renewal goroutine & wait for it to finish on exit
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go func() {
@@ -133,6 +133,7 @@ func run(ctx context.Context, env Environment) error {
 	// demonstrates database authentication with dynamic secrets
 	r.GET("/products", h.GetProducts)
 
+	// http.ListenAndServe with graceful shutdown logic
 	endless.ListenAndServe(env.MyAddress, r)
 
 	return nil
