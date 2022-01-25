@@ -140,18 +140,18 @@ docker logs hello-vault-go-app-1 2>&1 | grep auth
 ```log
 2022/01/11 20:22:55 logging in to vault with approle auth; role id: demo-web-app
 2022/01/11 20:22:55 logging in to vault with approle auth: success!
-2022/01/11 20:22:55 auth token: successfully renewed
-2022/01/11 20:24:21 auth token: successfully renewed
-2022/01/11 20:25:47 auth token: successfully renewed
-2022/01/11 20:27:13 auth token: successfully renewed
-2022/01/11 20:27:33 auth token: successfully renewed
-2022/01/11 20:28:34 auth token: successfully renewed
+2022/01/11 20:22:55 auth token: successfully renewed; remaining duration: 120s
+2022/01/11 20:24:21 auth token: successfully renewed; remaining duration: 120s
+2022/01/11 20:25:47 auth token: successfully renewed; remaining duration: 120s
+2022/01/11 20:27:13 auth token: successfully renewed; remaining duration: 120s
+2022/01/11 20:27:33 auth token: successfully renewed; remaining duration: 120s
+2022/01/11 20:28:34 auth token: successfully renewed; remaining duration: 105s
 2022/01/11 20:28:34 auth token: can no longer be renewed; will log in again
 2022/01/11 20:28:34 logging in to vault with approle auth; role id: demo-web-app
 2022/01/11 20:28:34 logging in to vault with approle auth: success!
-2022/01/11 20:28:34 auth token: successfully renewed
-2022/01/11 20:29:58 auth token: successfully renewed
-2022/01/11 20:31:23 auth token: successfully renewed
+2022/01/11 20:28:34 auth token: successfully renewed; remaining duration: 120s
+2022/01/11 20:29:58 auth token: successfully renewed; remaining duration: 120s
+2022/01/11 20:31:23 auth token: successfully renewed; remaining duration: 120s
 ```
 
 Examine the logs for database credentials renew / reconnect cycle:
