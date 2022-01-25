@@ -133,8 +133,8 @@ func (v *Vault) renewLeases(ctx context.Context, authToken, databaseCredentialsL
 
 		// RenewCh is a channel that receives a message when a successful
 		// renewal takes place and includes metadata about the renewal.
-		case <-authTokenWatcher.RenewCh():
-			log.Printf("auth token: successfully renewed")
+		case info := <-authTokenWatcher.RenewCh():
+			log.Printf("auth token: successfully renewed; remaining duration: %ds", info.Secret.Auth.LeaseDuration)
 
 		case info := <-databaseCredentialsWatcher.RenewCh():
 			log.Printf("database credentials: successfully renewed; remaining lease duration: %ds", info.Secret.LeaseDuration)
