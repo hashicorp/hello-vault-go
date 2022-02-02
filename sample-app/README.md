@@ -135,7 +135,7 @@ renewed periodically. This includes authentication tokens and database
 credential [leases][vault-leases].
 
 > **NOTE**: it may be easier to see how the secrets are renewed in
-> [this diagram](../images/renewal-diagram.svg).
+> [this diagram](../images/sample-app-renewal-diagram.svg).
 
 Examine the logs for how the Vault auth token is periodically renewed:
 
@@ -213,7 +213,7 @@ commands above, verify the output, and bring down the environment:
 
 ### Docker Compose Architecture
 
-![architecture overview](../images/architecture-overview.svg)
+![architecture overview](../images/sample-app-architecture-overview.svg)
 
 [vault]:                 https://www.vaultproject.io/
 [vault-leases]:          https://www.vaultproject.io/docs/concepts/lease
