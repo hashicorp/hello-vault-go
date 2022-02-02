@@ -99,7 +99,7 @@ services:
       retries:      30
 
   # a dummy service which blocks "docker compose up -d" from returning until all services are up & healthy
-  healthy:
+  app-healthy:
     image: alpine:latest
     command: [ "echo", "all services are up & healthy" ]
     depends_on:
