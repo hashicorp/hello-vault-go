@@ -1,6 +1,7 @@
 # hello-vault-go
 
-HashiCorp [Vault](https://www.vaultproject.io/) runnable examples in Go.
+Runnable examples in Go of how to integrate an application with HashiCorp
+[Vault](https://www.vaultproject.io/).
 
 ## [Quick Start](./quick-start/)
 
@@ -8,9 +9,8 @@ This is a simple example of reading and writing your first secret!
 
 ## [Sample Application](./sample-app/)
 
-Here you will find a more production-like example that demonstrates many
-important concepts, including authenitcation, dynamic secrets, and lease renewal
-logic.
+Here you will find a more realistic example that demonstrates many important
+concepts, including authentication, dynamic secrets, and lease renewal logic.
 
 ## Examples in other languages
 
