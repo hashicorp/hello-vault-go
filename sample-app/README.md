@@ -1,4 +1,4 @@
-# Sample application
+# Sample Application
 
 This is a sample application that demonstrates various aspects of interacting
 with HashiCorp [Vault][vault], including:
@@ -7,7 +7,7 @@ with HashiCorp [Vault][vault], including:
 - Reading a static secret from [kv-v2 secrets engine][vault-kv-v2]
 - Reading a dynamic secret from [PostgreSQL database secrets engine][vault-postgresql]
 - Periodic token [lease renewal][vault-leases] & re-login logic
-- Periodic database credentials [lease renewal][vault-leases] & reconnect logic
+- Periodic database credentials [lease renewal][vault-leases] & reconnection logic
 
 ## Prerequisites
 
