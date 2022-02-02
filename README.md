@@ -1,6 +1,6 @@
 # hello-vault-go
 
-HashiCorp [Vault][https://www.vaultproject.io/] runnable examples in Go.
+HashiCorp [Vault](https://www.vaultproject.io/) runnable examples in Go.
 
 ## [Quick Start](./quick-start/)
 
