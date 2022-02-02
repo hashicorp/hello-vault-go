@@ -33,7 +33,7 @@ services:
         condition: service_healthy
 
   vault-server:
-    build: ./setup/vault-server/
+    build: ../setup/vault-server/
     cap_add:
       - IPC_LOCK
     environment:
@@ -51,7 +51,7 @@ services:
         condition: service_healthy
 
   trusted-orchestrator:
-    build: ./setup/trusted-orchestrator
+    build: ../setup/trusted-orchestrator
     environment:
       VAULT_ADDRESS:      http://vault-server:8200
       ORCHESTRATOR_TOKEN: insecure-token
@@ -69,7 +69,7 @@ services:
       POSTGRES_PASSWORD: rootpassword
     volumes:
       - type:   bind
-        source: ./setup/database/
+        source: ../setup/database/
         target: /docker-entrypoint-initdb.d/
     ports:
       - "5432:5432"
@@ -87,7 +87,7 @@ services:
       EXPECTED_API_KEY: my-secret-key # sets the expected value for incoming requests' header X-API-KEY
     volumes:
       - type:   bind
-        source: ./setup/secure-service/default.conf.template
+        source: ../setup/secure-service/default.conf.template
         target: /etc/nginx/templates/default.conf.template
     ports:
       - "1717:80"
