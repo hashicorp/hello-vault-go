@@ -6,8 +6,8 @@ with HashiCorp [Vault][vault], including:
 - [AppRole][vault-app-role] authentication with a [response-wrapping token][vault-token-wrapping]
 - Reading a static secret from [kv-v2 secrets engine][vault-kv-v2]
 - Reading a dynamic secret from [PostgreSQL database secrets engine][vault-postgresql]
-- Periodic token [lease renewal][vault-leases] & re-login logic
-- Periodic database credentials [lease renewal][vault-leases] & reconnection logic
+- Authentication token [lease renewal][vault-leases] & re-login logic
+- Database credentials [lease renewal][vault-leases] & reconnection logic
 
 ## Prerequisites
 
