@@ -1,4 +1,4 @@
-# Sample Application
+# Vault Sample Application
 
 This is a sample application that demonstrates various aspects of interacting
 with HashiCorp [Vault][vault], including:
