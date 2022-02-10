@@ -1,4 +1,5 @@
-module github.com/hashicorp/hello-vault-go
+module github.gom/hashicorp/hello-vault-go/sample-app
+
 
 go 1.16
 
