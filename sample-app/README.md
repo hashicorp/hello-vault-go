@@ -134,7 +134,7 @@ One of the complexities of dealing with short-lived secrets is that they must be
 renewed periodically. This includes authentication tokens and database
 credential [leases][vault-leases].
 
-> **NOTE**: it may be easier to see how the secrets are renewed in
+> **NOTE**: it may be easier to understand how the secrets are renewed in
 > [this diagram](./pics/renewal-diagram.svg).
 
 Examine the logs for how the Vault auth token is periodically renewed:
@@ -206,14 +206,14 @@ commands above, verify the output, and bring down the environment:
 
 ### API
 
-| Endpoint             | Description                                                            |
-| -------------------- | ---------------------------------------------------------------------- |
-| **POST** `/payments` | A simple example of Vault static secrets workflow (see example above)  |
-| **GET** `/products`  | A simple example of Vault dynamic secrets workflow (see example above) |
+| Endpoint             | Description                                                                     |
+| -------------------- | ------------------------------------------------------------------------------- |
+| **POST** `/payments` | A simple example of Vault static secrets workflow (refer to the example above)  |
+| **GET** `/products`  | A simple example of Vault dynamic secrets workflow (refer to the example above) |
 
 ### Docker Compose Architecture
 
-![architecture overview](./pics/architecture-overview.svg)
+![Architecture overview of the docker-compose setup. Our Go service authenticates with a Vault dev instance using a token provided by a Trusted Orchestrator. It then fetches an api key from Vault to communicate with a Secure Service. It also connects to a PostgreSQL database using Vault-provided credentials.](./pics/architecture-overview.svg)
 
 [vault]:                 https://www.vaultproject.io/
 [vault-leases]:          https://www.vaultproject.io/docs/concepts/lease
