@@ -15,3 +15,4 @@ concepts, including authentication, dynamic secrets, and lease renewal logic.
 ## Examples in other languages
 
 - [C#](https://github.com/hashicorp/hello-vault-dotnet)
+- [Java](https://github.com/hashicorp/hello-vault-spring)
