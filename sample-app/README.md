@@ -3,9 +3,11 @@
 This is a sample application that demonstrates various aspects of interacting
 with HashiCorp [Vault][vault], including:
 
-- [AppRole][vault-app-role] authentication with a [response-wrapping token][vault-token-wrapping]
+- [AppRole][vault-app-role] authentication with a [response-wrapping
+  token][vault-token-wrapping]
 - Reading a static secret from [kv-v2 secrets engine][vault-kv-v2]
-- Reading a dynamic secret from [PostgreSQL database secrets engine][vault-postgresql]
+- Reading a dynamic secret from [PostgreSQL database secrets
+  engine][vault-postgresql]
 - Authentication token [lease renewal][vault-leases] & re-login logic
 - Database credentials [lease renewal][vault-leases] & reconnection logic
 
