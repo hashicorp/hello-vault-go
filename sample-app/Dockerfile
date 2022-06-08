@@ -1,4 +1,4 @@
-FROM golang:1.16-alpine AS build
+FROM golang:1.17-alpine AS build
 COPY  . /app
 WORKDIR /app
 RUN go build -o hello-vault
