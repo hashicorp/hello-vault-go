@@ -59,7 +59,7 @@ func (v *Vault) PeriodicallyRenewLeases(
 		if renewed&expiringDatabaseCredentialsLease != 0 {
 			log.Printf("database credentials: can no longer be renewed; will fetch new credentials & reconnect")
 
-			databaseCredentials, databaseCredentialsLease, err := v.GetDatabaseCredentials()
+			databaseCredentials, databaseCredentialsLease, err := v.GetDatabaseCredentials(ctx)
 			if err != nil {
 				log.Fatalf("database credentials error: %v", err) // simplified error handling
 			}
