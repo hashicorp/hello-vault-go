@@ -21,7 +21,8 @@ type Environment struct {
 	VaultAddress             string `env:"VAULT_ADDRESS"                 default:"localhost:8200"               description:"Vault address"                                          long:"vault-address"`
 	VaultApproleRoleID       string `env:"VAULT_APPROLE_ROLE_ID"         required:"true"                        description:"AppRole RoleID to log in to Vault"                      long:"vault-approle-role-id"`
 	VaultApproleSecretIDFile string `env:"VAULT_APPROLE_SECRET_ID_FILE"  default:"/tmp/secret"                  description:"AppRole SecretID file path to log in to Vault"          long:"vault-approle-secret-id-file"`
-	VaultAPIKeyPath          string `env:"VAULT_API_KEY_PATH"            default:"kv-v2/data/api-key"           description:"Path to the API key used by 'secure-sevice'"            long:"vault-api-key-path"`
+	VaultAPIKeyPath          string `env:"VAULT_API_KEY_PATH"            default:"api-key"                      description:"Path to the API key used by 'secure-service'"           long:"vault-api-key-path"`
+	VaultAPIKeyMountPath     string `env:"VAULT_API_KEY_MOUNT_PATH"      default:"kv-v2"                        description:"The location where the KV v2 secrets engine has been mounted in Vault" long:"vault-api-key-mount-path"`
 	VaultAPIKeyField         string `env:"VAULT_API_KEY_FIELD"           default:"api-key-field"                description:"The secret field name for the API key"                  long:"vault-api-key-descriptor"`
 	VaultDatabaseCredsPath   string `env:"VAULT_DATABASE_CREDS_PATH"     default:"database/creds/dev-readonly"  description:"Temporary database credentials will be generated here"  long:"vault-database-creds-path"`
 
@@ -67,6 +68,7 @@ func run(ctx context.Context, env Environment) error {
 			approleRoleID:           env.VaultApproleRoleID,
 			approleSecretIDFile:     env.VaultApproleSecretIDFile,
 			apiKeyPath:              env.VaultAPIKeyPath,
+			apiKeyMountPath:         env.VaultAPIKeyMountPath,
 			apiKeyField:             env.VaultAPIKeyField,
 			databaseCredentialsPath: env.VaultDatabaseCredsPath,
 		},
@@ -76,7 +78,7 @@ func run(ctx context.Context, env Environment) error {
 	}
 
 	// database
-	databaseCredentials, databaseCredentialsLease, err := vault.GetDatabaseCredentials()
+	databaseCredentials, databaseCredentialsLease, err := vault.GetDatabaseCredentials(ctx)
 	if err != nil {
 		return fmt.Errorf("unable to retrieve database credentials from vault: %w", err)
 	}

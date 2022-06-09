@@ -18,6 +18,7 @@ type VaultParameters struct {
 
 	// the locations / field names of our two secrets
 	apiKeyPath              string
+	apiKeyMountPath         string
 	apiKeyField             string
 	databaseCredentialsPath string
 }
@@ -95,20 +96,15 @@ func (v *Vault) login(ctx context.Context) (*vault.Secret, error) {
 }
 
 // GetSecretAPIKey fetches the latest version of secret api key from kv-v2
-func (v *Vault) GetSecretAPIKey() (string, error) {
+func (v *Vault) GetSecretAPIKey(ctx context.Context) (string, error) {
 	log.Println("getting secret api key from vault")
 
-	secret, err := v.client.Logical().Read(v.parameters.apiKeyPath)
+	secret, err := v.client.KVv2(v.parameters.apiKeyMountPath).Get(ctx, v.parameters.apiKeyPath)
 	if err != nil {
 		return "", fmt.Errorf("unable to read secret: %w", err)
 	}
 
-	data, ok := secret.Data["data"].(map[string]interface{})
-	if !ok {
-		return "", fmt.Errorf("malformed secret returned")
-	}
-
-	apiKey, ok := data[v.parameters.apiKeyField]
+	apiKey, ok := secret.Data[v.parameters.apiKeyField]
 	if !ok {
 		return "", fmt.Errorf("the secret retrieved from vault is missing %q field", v.parameters.apiKeyField)
 	}
@@ -124,10 +120,10 @@ func (v *Vault) GetSecretAPIKey() (string, error) {
 }
 
 // GetDatabaseCredentials retrieves a new set of temporary database credentials
-func (v *Vault) GetDatabaseCredentials() (DatabaseCredentials, *vault.Secret, error) {
+func (v *Vault) GetDatabaseCredentials(ctx context.Context) (DatabaseCredentials, *vault.Secret, error) {
 	log.Println("getting temporary database credentials from vault")
 
-	lease, err := v.client.Logical().Read(v.parameters.databaseCredentialsPath)
+	lease, err := v.client.Logical().ReadWithContext(ctx, v.parameters.databaseCredentialsPath)
 	if err != nil {
 		return DatabaseCredentials{}, nil, fmt.Errorf("unable to read secret: %w", err)
 	}
