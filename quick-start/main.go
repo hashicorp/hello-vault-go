@@ -26,8 +26,10 @@ func main() {
 		"password": "Hashi123",
 	}
 
+	ctx := context.Background()
+
 	// Write a secret
-	_, err = client.KVv2("secret").Put(context.TODO(), "my-secret-password", secretData)
+	_, err = client.KVv2("secret").Put(ctx, "my-secret-password", secretData)
 	if err != nil {
 		log.Fatalf("unable to write secret: %v", err)
 	}
@@ -35,7 +37,7 @@ func main() {
 	log.Println("Secret written successfully.")
 
 	// Read a secret
-	secret, err := client.KVv2("secret").Get(context.TODO(), "my-secret-password")
+	secret, err := client.KVv2("secret").Get(ctx, "my-secret-password")
 	if err != nil {
 		log.Fatalf("unable to read secret: %v", err)
 	}

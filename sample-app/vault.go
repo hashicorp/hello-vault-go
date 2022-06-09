@@ -18,6 +18,7 @@ type VaultParameters struct {
 
 	// the locations / field names of our two secrets
 	apiKeyPath              string
+	apiKeyMountPath         string
 	apiKeyField             string
 	databaseCredentialsPath string
 }
@@ -98,7 +99,7 @@ func (v *Vault) login(ctx context.Context) (*vault.Secret, error) {
 func (v *Vault) GetSecretAPIKey(ctx context.Context) (string, error) {
 	log.Println("getting secret api key from vault")
 
-	secret, err := v.client.KVv2("kv-v2").Get(ctx, v.parameters.apiKeyPath)
+	secret, err := v.client.KVv2(v.parameters.apiKeyMountPath).Get(ctx, v.parameters.apiKeyPath)
 	if err != nil {
 		return "", fmt.Errorf("unable to read secret: %w", err)
 	}
