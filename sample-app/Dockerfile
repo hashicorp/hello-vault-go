@@ -8,7 +8,7 @@ COPY --from=build /app/hello-vault .
 EXPOSE 8080
 ENTRYPOINT [ "./hello-vault" ]
 
-RUN apk add --no-cache curl
+RUN apk add --no-cache bash curl
 
 HEALTHCHECK \
     --start-period=1s \
