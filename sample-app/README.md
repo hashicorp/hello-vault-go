@@ -86,6 +86,12 @@ tcp        0      0 192.168.19.3:53834      192.168.19.4:8200       TIME_WAIT
 
 If we make additional curl request to our app, we'll see more connections established & closed in `TIME_WAIT` as expected.
 
+To load test it, run the following:
+
+```shell-session
+k6 run --vus 100 --duration 60s k6.js
+```
+
 ### 4. Switch our Unbound DNS to point to the other vault server
 
 Modify [`a-records.conf`](docker-compose-setup/dns/etc/a-records.conf) to
