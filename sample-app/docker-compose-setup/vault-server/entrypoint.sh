@@ -44,9 +44,9 @@ vault auth enable approle
 # NOTE: we use artificially low ttl values to demonstrate the credential renewal logic
 vault write auth/approle/role/dev-role \
     token_policies=dev-policy \
-    secret_id_ttl="2m" \
-    token_ttl="2m" \
-    token_max_ttl="6m"
+    secret_id_ttl="2h" \
+    token_ttl="2h" \
+    token_max_ttl="6h"
 
 # Overwrite our role id with a known value to simplify our demo
 vault write auth/approle/role/dev-role/role-id role_id="${APPROLE_ROLE_ID}"
@@ -106,8 +106,8 @@ vault write database/roles/dev-readonly \
     db_name=my-postgresql-database \
     creation_statements="CREATE ROLE \"{{name}}\" WITH LOGIN PASSWORD '{{password}}' VALID UNTIL '{{expiration}}'; GRANT readonly TO \"{{name}}\";" \
     renew_statements="ALTER ROLE \"{{name}}\" WITH LOGIN PASSWORD '{{password}}' VALID UNTIL '{{expiration}}'; GRANT readonly TO \"{{name}}\";" \
-    default_ttl="100s" \
-    max_ttl="300s"
+    default_ttl="10h" \
+    max_ttl="30h"
 
 # This container is now healthy
 touch /tmp/healthy

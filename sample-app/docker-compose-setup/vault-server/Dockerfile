@@ -1,8 +1,8 @@
-FROM vault:1.9.1
+FROM vault:1.11.0
 
 # Add jq to make scripting the calls a bit easier
 # ref: https://stedolan.github.io/jq/
-RUN apk add --no-cache jq
+RUN apk add --no-cache jq bash
 
 # Add our preformatted policies
 COPY dev-policy.hcl                   /vault/config/dev-policy.hcl

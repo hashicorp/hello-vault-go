@@ -1,15 +1,4 @@
-# Vault Sample Application
-
-This is a sample application that demonstrates various aspects of interacting
-with HashiCorp [Vault][vault], including:
-
-- [AppRole][vault-app-role] authentication with a [response-wrapping
-  token][vault-token-wrapping]
-- Reading a static secret from [kv-v2 secrets engine][vault-kv-v2]
-- Reading a dynamic secret from [PostgreSQL database secrets
-  engine][vault-postgresql]
-- Authentication token [lease renewal][vault-leases] & re-login logic
-- Database credentials [lease renewal][vault-leases] & reconnection logic
+# Two-Vault Setup To Test DNS issues
 
 ## Prerequisites
 
@@ -23,50 +12,60 @@ with HashiCorp [Vault][vault], including:
 
 ## Try it out
 
-> **WARNING**: The Vault server used in this setup is configured to run in
-> `-dev` mode, an insecure setting that allows for easy testing.
-
-### 1. Bring up the services
-
-This step may take a few minutes to download the necessary dependencies.
+### 1. Bring up the docker-compose environment:
 
 ```shell-session
-./run.sh
+docker compose up -d --build
 ```
 
 ```
-[+] Running 8/8
- ⠿ Network hello-vault-go_default                          Created        0.1s
- ⠿ Volume "hello-vault-go_trusted-orchestrator-volume"     Created        0.0s
- ⠿ Container hello-vault-go-secure-service-1               Started        0.6s
- ⠿ Container hello-vault-go-database-1                     Started        0.6s
- ⠿ Container hello-vault-go-vault-server-1                 Started        1.3s
- ⠿ Container hello-vault-go-trusted-orchestrator-1         Started        8.6s
- ⠿ Container hello-vault-go-app-1                          Started       10.3s
- ⠿ Container hello-vault-go-app-healthy-1                  Started       11.7s
+[+] Running 11/11
+ ⠿ Network sample-app_default                       Created        0.0s
+ ⠿ Network sample-app_mynetwork                     Created        0.0s
+ ⠿ Volume "sample-app_trusted-orchestrator-volume"  Created        0.0s
+ ⠿ Container sample-app-secure-service-1            Healthy       39.3s
+ ⠿ Container sample-app-database-1                  Healthy       39.3s
+ ⠿ Container sample-app-dns-1                       Healthy       39.3s
+ ⠿ Container sample-app-vault-server2-1             Healthy       39.3s
+ ⠿ Container sample-app-vault-server1-1             Healthy       39.3s
+ ⠿ Container sample-app-trusted-orchestrator-1      Healthy       40.2s
+ ⠿ Container sample-app-app-1                       Healthy       42.0s
+ ⠿ Container sample-app-app-healthy-1               Started       42.2s
 
 ```
 
-Verify that the services started successfully:
+The script runs `docker compose up -d --build` and brings up:
+1. two vault servers running in `-dev` mode:
+  - `vault-server1` (192.168.19.4)
+  - `vault-server2` (192.168.19.5)
+2. `dns`, unbound DNS server (192.168.19.9)
+  - used in place of the default docker compose DNS
+  - has `a-records.conf` with entries for all docker-compose containers
+  - has `vlt` entry currently pointing to 192.168.19.4 (`vault-server-1`)
+3. a test application that uses `vault/api` to authenticate with and send requests to `vlt:8200`
+4. a few other containers that are not relevant to this test
+
+### 2. Check the established connections
 
 ```shell-session
-docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+ $ docker exec -it sample-app-app-1 netstat -n | grep 8200
+tcp        0      0 192.168.19.3:52108      192.168.19.4:8200       TIME_WAIT
+tcp        0      0 192.168.19.3:52112      192.168.19.4:8200       TIME_WAIT
+tcp        0      0 192.168.19.3:52104      192.168.19.4:8200       TIME_WAIT
+tcp        0      0 192.168.19.3:52114      192.168.19.4:8200       TIME_WAIT
+tcp        0      0 192.168.19.3:52106      192.168.19.4:8200       TIME_WAIT
 ```
 
-```
-NAMES                                   STATUS                        PORTS
-hello-vault-go-app-1                    Up About a minute (healthy)   0.0.0.0:8080->8080/tcp
-hello-vault-go-trusted-orchestrator-1   Up About a minute (healthy)
-hello-vault-go-vault-server-1           Up About a minute (healthy)   0.0.0.0:8200->8200/tcp
-hello-vault-go-secure-service-1         Up About a minute (healthy)   0.0.0.0:1717->80/tcp
-hello-vault-go-database-1               Up About a minute (healthy)   0.0.0.0:5432->5432/tcp
+These are the initial auth-related connections established to `vlt` which currently points at `192.168.19.4` (`vault-server1`). They are all in `TIME_WAIT` status (closed, waiting for any late server responses).
+
+After about a minute, all these connections are gone:
+
+```shell-session
+$ docker exec -it sample-app-app-1 netstat -n | grep 8200 | wc -l
+       0
 ```
 
-### 2. Try out `POST /payments` endpoint (static secrets workflow)
-
-`POST /payments` endpoint is a simple example of the static secrets workflow.
-Our service will make a request to another service's restricted API endpoint
-using an API key value stored in Vault's static secrets engine.
+### 3. Make the app send a request to Vault and check the established connections
 
 ```shell-session
 curl -s -X POST http://localhost:8080/payments | jq
@@ -78,144 +77,75 @@ curl -s -X POST http://localhost:8080/payments | jq
 }
 ```
 
-Check the logs:
+This makes a request to our `app`, which internally reads a Vault secret at `kv-v2/data/api-key` using `vault/api` library. This establishes another connection:
 
 ```shell-session
-docker logs hello-vault-go-app-1
+$  docker exec -it sample-app-app-1 netstat -n | grep 8200
+tcp        0      0 192.168.19.3:53834      192.168.19.4:8200       TIME_WAIT
 ```
 
-```log
-...
-2022/01/11 20:29:01 getting secret api key from vault
-2022/01/11 20:29:01 getting secret api key from vault: success!
-[GIN] 2022/01/11 - 20:29:01 | 200 |    7.366042ms |   192.168.192.1 | POST     "/payments"
+If we make additional curl request to our app, we'll see more connections established & closed in `TIME_WAIT` as expected.
+
+### 4. Switch our Unbound DNS to point to the other vault server
+
+Modify [`a-records.conf`](docker-compose-setup/dns/etc/a-records.conf) to
+point `vlt` at `192.168.19.5`:
+
+```dns
+    # vault-server1
+    #local-data: "vlt A 192.168.19.4"
+
+    # vault-server2
+    local-data: "vlt A 192.168.19.5"
 ```
 
-### 3. Try out `GET /products` endpoint (dynamic secrets workflow)
-
-`GET /products` endpoint is a simple example of the dynamic secrets workflow.
-Our application uses Vault's database secrets engine to generate dynamic
-database credentials, which are then used to connect to and retrieve data from a
-PostgreSQL database.
+Restart the unbound DNS server:
 
 ```shell-session
-curl -s -X GET http://localhost:8080/products | jq
+docker compose restart dns
+```
+
+Verify that the routing has been updated on the `app` node:
+
+```shell-session
+$ docker exec -it sample-app-app-1 nslookup vlt
+Server:         127.0.0.11
+Address:        127.0.0.11:53
+
+
+Name:   vlt
+Address: 192.168.19.5
+```
+
+### 5. Make the app send another request to Vault and check the connections:
+
+```shell-session
+$ curl -s -X POST http://localhost:8080/payments | jq
 ```
 
 ```json
-[
-  {
-    "id": 1,
-    "name": "Rustic Webcam"
-  },
-  {
-    "id": 2,
-    "name": "Haunted Coloring Book"
-  }
-]
+{
+  "error": "unable to read secret: error encountered while reading secret at kv-v2/data/api-key: Error making API request.\n\nURL: GET http://vlt:8200/v1/kv-v2/data/api-key\nCode: 500. Errors:\n\n* token mac for token_version:1 hmac:\"\\xa5!qx\\x17\\xcc\\xc9\\xd0\\x0ci\\xe5 6v\\xad/V\\x94\\x17M\\x8f\\x150\\x85sXfi\\xc1\\x1f\\x9e\\xe8\" token:\"\\n\\x1chvs.ibIusIJdnAxhOoa6rVQ863LD\" is incorrect: err %!w(<nil>)"
+}
 ```
 
-Check the logs:
+We get back an error since the two Vault instances are not running in `DR` replication mode (this is an Enterprise feature). However, the fact that token is rejected tells us that we are hitting the other vault server. Verify:
 
 ```shell-session
-docker logs hello-vault-go-app-1
+$  docker exec -it sample-app-app-1 netstat -n | grep 8200
+tcp        0      0 192.168.19.3:56208      192.168.19.4:8200       TIME_WAIT
+tcp        0      0 192.168.19.3:60596      192.168.19.5:8200       TIME_WAIT   <- new connection
+tcp        0      0 192.168.19.3:56200      192.168.19.4:8200       TIME_WAIT
+tcp        0      0 192.168.19.3:56190      192.168.19.4:8200       TIME_WAIT
+tcp        0      0 192.168.19.3:56212      192.168.19.4:8200       TIME_WAIT
 ```
 
-```log
-2022/01/11 20:22:55 getting temporary database credentials from vault
-2022/01/11 20:22:55 getting temporary database credentials from vault: success!
-2022/01/11 20:22:55 connecting to "postgres" database @ database:5432 with username "v-approle-dev-read-SHPJSHXdVWJ5dTdE22TA-1641932575"
-2022/01/11 20:22:55 connecting to "postgres" database: success!
-...
-[GIN] 2022/01/11 - 20:29:10 | 200 |    2.781958ms |   192.168.192.1 | GET      "/products"
-```
-
-### 4. Examine the logs for renew logic
-
-One of the complexities of dealing with short-lived secrets is that they must be
-renewed periodically. This includes authentication tokens and database
-credential [leases][vault-leases].
-
-> **NOTE**: it may be easier to understand how the secrets are renewed in
-> [this diagram](./pics/renewal-diagram.svg).
-
-Examine the logs for how the Vault auth token is periodically renewed:
+After about a minute, all the `192.168.19.4` entries disappear as expected:
 
 ```shell-session
-docker logs hello-vault-go-app-1 2>&1 | grep auth
+$  docker exec -it sample-app-app-1 netstat -n | grep 8200
+tcp        0      0 192.168.19.3:60596      192.168.19.5:8200       TIME_WAIT
 ```
-
-```log
-2022/01/11 20:22:55 logging in to vault with approle auth; role id: demo-web-app
-2022/01/11 20:22:55 logging in to vault with approle auth: success!
-2022/01/11 20:22:55 auth token: successfully renewed; remaining duration: 120s
-2022/01/11 20:24:21 auth token: successfully renewed; remaining duration: 120s
-2022/01/11 20:25:47 auth token: successfully renewed; remaining duration: 120s
-2022/01/11 20:27:13 auth token: successfully renewed; remaining duration: 120s
-2022/01/11 20:27:33 auth token: successfully renewed; remaining duration: 120s
-2022/01/11 20:28:34 auth token: successfully renewed; remaining duration: 105s
-2022/01/11 20:28:34 auth token: can no longer be renewed; will log in again
-2022/01/11 20:28:34 logging in to vault with approle auth; role id: demo-web-app
-2022/01/11 20:28:34 logging in to vault with approle auth: success!
-2022/01/11 20:28:34 auth token: successfully renewed; remaining duration: 120s
-2022/01/11 20:29:58 auth token: successfully renewed; remaining duration: 120s
-2022/01/11 20:31:23 auth token: successfully renewed; remaining duration: 120s
-```
-
-Examine the logs for database credentials renew / reconnect cycle:
-
-```shell-session
-docker logs hello-vault-go-app-1 2>&1 | grep database
-```
-
-```log
-2022/01/11 20:22:55 getting temporary database credentials from vault
-2022/01/11 20:22:55 getting temporary database credentials from vault: success!
-2022/01/11 20:22:55 connecting to "postgres" database @ database:5432 with username "v-approle-dev-read-SHPJSHXdVWJ5dTdE22TA-1641932575"
-2022/01/11 20:22:55 connecting to "postgres" database: success!
-2022/01/11 20:22:55 database credentials: successfully renewed; remaining lease duration: 100s
-2022/01/11 20:24:07 database credentials: successfully renewed; remaining lease duration: 100s
-2022/01/11 20:25:20 database credentials: successfully renewed; remaining lease duration: 100s
-2022/01/11 20:26:33 database credentials: successfully renewed; remaining lease duration: 82s
-2022/01/11 20:27:33 database credentials: successfully renewed; remaining lease duration: 22s
-2022/01/11 20:27:33 database credentials: can no longer be renewed; will fetch new credentials & reconnect
-2022/01/11 20:27:33 getting temporary database credentials from vault
-2022/01/11 20:27:33 getting temporary database credentials from vault: success!
-2022/01/11 20:27:33 connecting to "postgres" database @ database:5432 with username "v-approle-dev-read-96y8N3aQdliwjo4bfpuD-1641932853"
-2022/01/11 20:27:33 connecting to "postgres" database: success!
-2022/01/11 20:27:33 database credentials: successfully renewed; remaining lease duration: 100s
-2022/01/11 20:28:34 database credentials: can no longer be renewed; will fetch new credentials & reconnect
-2022/01/11 20:28:34 getting temporary database credentials from vault
-2022/01/11 20:28:34 getting temporary database credentials from vault: success!
-2022/01/11 20:28:34 connecting to "postgres" database @ database:5432 with username "v-approle-dev-read-Yzob1xVLehrxpZzLIHJl-1641932914"
-2022/01/11 20:28:34 connecting to "postgres" database: success!
-```
-
-> **NOTE**: the third time we fetch database credentials (at `20:28:34` in the
-> log) is due to the auth token expiring. Any leases created by a token get
-> revoked when the token is revoked, which includes our database credentials.
-
-## Integration Tests
-
-The following script will bring up the docker-compose environment, run the curl
-commands above, verify the output, and bring down the environment:
-
-```shell-session
-./run-tests.sh
-```
-
-## Stack Design
-
-### API
-
-| Endpoint             | Description                                                                     |
-| -------------------- | ------------------------------------------------------------------------------- |
-| **POST** `/payments` | A simple example of Vault static secrets workflow (refer to the example above)  |
-| **GET** `/products`  | A simple example of Vault dynamic secrets workflow (refer to the example above) |
-
-### Docker Compose Architecture
-
-![Architecture overview of the docker-compose setup. Our Go service authenticates with a Vault dev instance using a token provided by a Trusted Orchestrator. It then fetches an api key from Vault to communicate with a Secure Service. It also connects to a PostgreSQL database using Vault-provided credentials.](./pics/architecture-overview.svg)
 
 [vault]:                 https://www.vaultproject.io/
 [vault-leases]:          https://www.vaultproject.io/docs/concepts/lease
