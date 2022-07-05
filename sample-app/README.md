@@ -36,14 +36,14 @@ This step may take a few minutes to download the necessary dependencies.
 
 ```
 [+] Running 8/8
- ⠿ Network hello-vault-go_default                          Created        0.1s
- ⠿ Volume "hello-vault-go_trusted-orchestrator-volume"     Created        0.0s
- ⠿ Container hello-vault-go-secure-service-1               Started        0.6s
- ⠿ Container hello-vault-go-database-1                     Started        0.6s
- ⠿ Container hello-vault-go-vault-server-1                 Started        1.3s
- ⠿ Container hello-vault-go-trusted-orchestrator-1         Started        8.6s
- ⠿ Container hello-vault-go-app-1                          Started       10.3s
- ⠿ Container hello-vault-go-app-healthy-1                  Started       11.7s
+ ⠿ Network sample-app_default                          Created        0.1s
+ ⠿ Volume "sample-app_trusted-orchestrator-volume"     Created        0.0s
+ ⠿ Container sample-app-secure-service-1               Started        0.6s
+ ⠿ Container sample-app-database-1                     Started        0.6s
+ ⠿ Container sample-app-vault-server-1                 Started        1.3s
+ ⠿ Container sample-app-trusted-orchestrator-1         Started        8.6s
+ ⠿ Container sample-app-app-1                          Started       10.3s
+ ⠿ Container sample-app-app-healthy-1                  Started       11.7s
 
 ```
 
@@ -55,11 +55,11 @@ docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
 
 ```
 NAMES                                   STATUS                        PORTS
-hello-vault-go-app-1                    Up About a minute (healthy)   0.0.0.0:8080->8080/tcp
-hello-vault-go-trusted-orchestrator-1   Up About a minute (healthy)
-hello-vault-go-vault-server-1           Up About a minute (healthy)   0.0.0.0:8200->8200/tcp
-hello-vault-go-secure-service-1         Up About a minute (healthy)   0.0.0.0:1717->80/tcp
-hello-vault-go-database-1               Up About a minute (healthy)   0.0.0.0:5432->5432/tcp
+sample-app-app-1                    Up 3 minutes (healthy)   0.0.0.0:8080->8080/tcp
+sample-app-trusted-orchestrator-1   Up 3 minutes (healthy)
+sample-app-vault-server-1           Up 3 minutes (healthy)   0.0.0.0:8200->8200/tcp
+sample-app-secure-service-1         Up 3 minutes (healthy)   0.0.0.0:1717->80/tcp
+sample-app-database-1               Up 3 minutes (healthy)   0.0.0.0:5432->5432/tcp
 ```
 
 ### 2. Try out `POST /payments` endpoint (static secrets workflow)
@@ -81,7 +81,7 @@ curl -s -X POST http://localhost:8080/payments | jq
 Check the logs:
 
 ```shell-session
-docker logs hello-vault-go-app-1
+docker logs sample-app-app-1
 ```
 
 ```log
@@ -118,7 +118,7 @@ curl -s -X GET http://localhost:8080/products | jq
 Check the logs:
 
 ```shell-session
-docker logs hello-vault-go-app-1
+docker logs sample-app-app-1
 ```
 
 ```log
@@ -142,7 +142,7 @@ credential [leases][vault-leases].
 Examine the logs for how the Vault auth token is periodically renewed:
 
 ```shell-session
-docker logs hello-vault-go-app-1 2>&1 | grep auth
+docker logs sample-app-app-1 2>&1 | grep auth
 ```
 
 ```log
@@ -165,7 +165,7 @@ docker logs hello-vault-go-app-1 2>&1 | grep auth
 Examine the logs for database credentials renew / reconnect cycle:
 
 ```shell-session
-docker logs hello-vault-go-app-1 2>&1 | grep database
+docker logs sample-app-app-1 2>&1 | grep database
 ```
 
 ```log
