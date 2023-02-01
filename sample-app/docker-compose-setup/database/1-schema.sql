@@ -1,3 +1,6 @@
+-- Copyright (c) HashiCorp, Inc.
+-- SPDX-License-Identifier: MPL-2.0
+
 CREATE TABLE IF NOT EXISTS products (
    id          serial        PRIMARY KEY,
    name        VARCHAR(255)  NOT NULL
