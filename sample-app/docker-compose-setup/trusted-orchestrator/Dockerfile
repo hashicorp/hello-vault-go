@@ -1,3 +1,6 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 FROM alpine:latest
 
 # Add some basic command-line tools to make scripting the calls a bit easier

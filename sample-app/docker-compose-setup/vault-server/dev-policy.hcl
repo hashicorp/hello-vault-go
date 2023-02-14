@@ -1,3 +1,6 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 # This section grants access to "kv-v2/data/api-key"
 path "kv-v2/data/api-key" {
   capabilities = ["read", "update"]
