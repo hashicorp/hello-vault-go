@@ -1,13 +1,13 @@
 module github.gom/hashicorp/hello-vault-go/quick-start
 
 go 1.21
-toolchain go1.23.7
+toolchain go1.24.1
 
 require github.com/hashicorp/vault/api v1.10.0
 
 require (
 	github.com/cenkalti/backoff/v3 v3.2.2 // indirect
-	github.com/go-jose/go-jose/v3 v3.0.3 // indirect
+	github.com/go-jose/go-jose/v3 v3.0.4 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
