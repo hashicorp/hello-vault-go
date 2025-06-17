@@ -1,7 +1,8 @@
 module github.gom/hashicorp/hello-vault-go/sample-app
 
-go 1.23
-toolchain go1.24.1
+go 1.23.0
+
+toolchain go1.24.4
 
 require (
 	github.com/fvbock/endless v0.0.0-20170109170031-447134032cb6
