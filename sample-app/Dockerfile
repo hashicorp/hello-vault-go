@@ -1,7 +1,7 @@
 # Copyright (c) HashiCorp, Inc.
 # SPDX-License-Identifier: MPL-2.0
 
-FROM golang:1.21-alpine AS build
+FROM golang:1.23-alpine AS build
 COPY  . /app
 WORKDIR /app
 RUN go build -o hello-vault

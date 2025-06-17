@@ -1,6 +1,6 @@
 module github.gom/hashicorp/hello-vault-go/quick-start
 
-go 1.21
+go 1.23
 toolchain go1.24.1
 
 require github.com/hashicorp/vault/api v1.10.0
