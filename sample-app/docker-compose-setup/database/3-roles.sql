@@ -1,4 +1,4 @@
--- Copyright (c) HashiCorp, Inc.
+-- Copyright IBM Corp. 2021, 2025
 -- SPDX-License-Identifier: MPL-2.0
 
 CREATE ROLE vault_db_user LOGIN SUPERUSER PASSWORD 'vault_db_password';

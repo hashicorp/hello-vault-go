@@ -1,4 +1,4 @@
-# Copyright (c) HashiCorp, Inc.
+# Copyright IBM Corp. 2021, 2025
 # SPDX-License-Identifier: MPL-2.0
 
 # Grant 'update' permission on the 'auth/approle/role/<role_name>/secret-id' path for generating a secret id
